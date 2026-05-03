@@ -1444,7 +1444,7 @@ function getImageAltText(food) {
 function sanitizeImageUrl(value) {
   if (!value) return '';
   try {
-    const url = new URL(value, window.location.href);
+    const url = new URL(value, window.location.origin);
     if (url.protocol === 'https:') return url.href;
   } catch (e) {
     return '';
@@ -1491,7 +1491,7 @@ function renderTable(slice) {
               height: 32,
               loading: 'lazy',
               decoding: 'async',
-              style: 'width:32px;height:32px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle;flex-shrink:0;'
+              style: 'border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle;flex-shrink:0;'
             })
           : '';
         td.className = 'food-name-cell';
@@ -1658,7 +1658,7 @@ function openModal(food) {
         style: imgSrc ? 'display:block' : 'display:none'
       })}
       <div class="modal-img-placeholder" id="modalImgPlaceholder" style="${imgSrc ? 'display:none' : ''}">${emoji}</div>
-      <div class="modal-img-note">Add an image URL for this food item</div>
+      <div class="modal-img-note">Add an HTTPS image URL (loaded from external sources)</div>
       <input class="modal-img-url-input" type="url" id="imgUrlInput" placeholder="https://example.com/food-image.jpg" value="${imgSrc}">
       <div class="modal-img-actions">
         <button class="btn-small btn-primary" onclick="saveImage('${food.Food_ID}')">Save Image</button>
