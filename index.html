@@ -1,1 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriBase — Sri Lanka & India Food Composition Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #1c2430;
+    --surface: #21262d;
+    --border: #30363d;
+    --accent: #e8c547;
+    --accent2: #5cb85c;
+    --accent3: #e05a2b;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #484f58;
+    --cereal: #f0c04a;
+    --pulse: #7ee787;
+    --veg: #56d364;
+    --fruit: #ff7b72;
+    --spice: #d2a679;
+    --nut: #ffa657;
+    --meat: #e0785a;
+    --fish: #79c0ff;
+    --dairy: #a5d6ff;
+    --sugar: #ffb3c6;
+    --root: #c9a227;
+    --beverage: #89dceb;
+    --cooked: #bb8fce;
+    --egg: #f9e076;
+    --fat: #f97316;
+  }
 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, #0d1117 0%, #1a1f2e 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 16px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  .header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .logo-text h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .logo-text p {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 2px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 16px;
+    margin-left: auto;
+    align-items: center;
+  }
+
+  .stat-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  .stat-chip strong { color: var(--accent); font-weight: 600; }
+
+  /* Search + Filters */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 400px;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    pointer-events: none;
+  }
+
+  #searchInput {
+    width: 100%;
+    padding: 9px 12px 9px 38px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  #searchInput:focus { border-color: var(--accent); }
+  #searchInput::placeholder { color: var(--text3); }
+
+  select, .btn-filter {
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  select:focus, select:hover { border-color: var(--accent); color: var(--text); }
+
+  .btn-filter {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+
+  .btn-filter:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-filter.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  /* Nutrient selector */
+  .nutrient-picker {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .nutrient-label {
+    font-size: 11px;
+    color: var(--text2);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .nut-btn {
+    padding: 4px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text2);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .nut-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nut-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+
+  /* Main */
+  main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  /* Results bar */
+  .results-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .results-count {
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .results-count strong { color: var(--accent); }
+
+  .view-controls {
+    display: flex;
+    gap: 4px;
+  }
+
+  .view-btn {
+    padding: 5px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .view-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+
+  /* Table */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  thead tr {
+    background: var(--bg3);
+  }
+
+  th {
+    padding: 10px 12px;
+    text-align: left;
+    color: var(--text2);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    position: sticky;
+    top: 0;
+    background: var(--bg3);
+  }
+
+  th:hover { color: var(--accent); }
+
+  th .sort-arrow { opacity: 0.3; margin-left: 4px; font-size: 9px; }
+  th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    animation: rowIn 0.3s ease both;
+  }
+
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  tbody tr:hover { background: var(--bg3); }
+  tbody tr:last-child { border-bottom: none; }
+
+  td {
+    padding: 9px 12px;
+    vertical-align: middle;
+  }
+
+  .food-name-cell { min-width: 180px; }
+
+  .food-name { font-weight: 500; color: var(--text); line-height: 1.3; }
+  .food-local { font-size: 10px; color: var(--text2); margin-top: 2px; }
+  .food-sci { font-size: 10px; color: var(--text3); font-style: italic; margin-top: 1px; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .badge-group { border: 1px solid; }
+  .badge-form {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-top: 3px;
+    display: inline-block;
+  }
+
+  .num { 
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    text-align: right;
+  }
+
+  .num-highlight { color: var(--accent); font-weight: 600; }
+  .num-na { color: var(--text3); font-size: 10px; }
+
+  .bar-cell { min-width: 80px; }
+  .mini-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 3px;
+  }
+  .mini-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+
+  /* Country badge */
+  .country-flag { font-size: 14px; }
+
+  /* Card view */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+    display: none;
+  }
+
+  .food-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: pointer;
+    animation: cardIn 0.3s ease both;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .food-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .card-name { font-weight: 600; font-size: 14px; color: var(--text); line-height: 1.3; }
+  .card-sci { font-size: 10px; color: var(--text2); font-style: italic; margin-top: 2px; }
+  .card-local { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  .card-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--surface);
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  .card-macros {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin: 10px 0;
+    padding: 10px;
+    background: var(--surface);
+    border-radius: 8px;
+  }
+
+  .macro-item { text-align: center; }
+  .macro-value { font-family: 'DM Mono', monospace; font-weight: 600; font-size: 14px; color: var(--text); }
+  .macro-label { font-size: 9px; color: var(--text2); text-transform: uppercase; margin-top: 1px; letter-spacing: 0.3px; }
+
+  .card-micros {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .micro-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 6px;
+    background: var(--bg3);
+    border-radius: 4px;
+  }
+
+  .micro-name { color: var(--text2); }
+  .micro-val { font-family: 'DM Mono', monospace; color: var(--text); font-size: 11px; }
+
+  /* Pill row for card */
+  .card-pills { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 720px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalIn 0.25s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-header {
+    padding: 20px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    background: var(--bg2);
+    z-index: 1;
+  }
+
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
+  .modal-subtitle { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .modal-close:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  .modal-body { padding: 16px 20px 20px; }
+
+  .modal-img-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .modal-img-placeholder {
+    font-size: 48px;
+    margin-bottom: 8px;
+  }
+
+  .modal-img-note {
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 10px;
+  }
+
+  .modal-img-url-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .modal-img-url-input:focus { border-color: var(--accent); }
+
+  .modal-img-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    justify-content: center;
+  }
+
+  .btn-small {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary { background: transparent; color: var(--text2); border-color: var(--border); }
+  .btn-secondary:hover { border-color: var(--text2); color: var(--text); }
+
+  .modal-food-img {
+    max-width: 100%;
+    max-height: 180px;
+    border-radius: 8px;
+    object-fit: cover;
+    display: none;
+    margin: 0 auto 8px;
+  }
+
+  .nutrient-section { margin-bottom: 16px; }
+  .nutrient-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text2);
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .nutrient-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .nutrient-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 6px;
+  }
+
+  .nutrient-item {
+    background: var(--bg3);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .nutrient-item-name { font-size: 10px; color: var(--text2); }
+  .nutrient-item-val { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 600; color: var(--text); }
+  .nutrient-item-unit { font-size: 9px; color: var(--text3); }
+
+  .notes-box {
+    background: var(--bg3);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  /* No results */
+  .no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text2);
+    display: none;
+  }
+
+  .no-results-emoji { font-size: 48px; margin-bottom: 12px; }
+  .no-results h3 { font-size: 18px; color: var(--text); margin-bottom: 6px; }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 60px;
+    color: var(--text2);
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 12px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Group colors */
+  .g-cereals { color: var(--cereal); border-color: var(--cereal); }
+  .g-pulses { color: var(--pulse); border-color: var(--pulse); }
+  .g-green { color: var(--veg); border-color: var(--veg); }
+  .g-other-veg { color: #70c7a4; border-color: #70c7a4; }
+  .g-fruits { color: var(--fruit); border-color: var(--fruit); }
+  .g-spices { color: var(--spice); border-color: var(--spice); }
+  .g-nuts { color: var(--nut); border-color: var(--nut); }
+  .g-meat { color: var(--meat); border-color: var(--meat); }
+  .g-fish { color: var(--fish); border-color: var(--fish); }
+  .g-milk { color: var(--dairy); border-color: var(--dairy); }
+  .g-eggs { color: var(--egg); border-color: var(--egg); }
+  .g-cooked { color: var(--cooked); border-color: var(--cooked); }
+  .g-roots { color: var(--root); border-color: var(--root); }
+  .g-sugars { color: var(--sugar); border-color: var(--sugar); }
+  .g-sweets { color: #f472b6; border-color: #f472b6; }
+  .g-beverages { color: var(--beverage); border-color: var(--beverage); }
+  .g-fats { color: var(--fat); border-color: var(--fat); }
+  .g-default { color: var(--text2); border-color: var(--border); }
+
+  /* Mobile nav dots */
+  .col-dots {
+    display: none;
+  }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .page-btn {
+    padding: 6px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .page-btn:hover, .page-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* Visible columns toggle */
+  .col-toggle {
+    position: relative;
+  }
+
+  .col-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    z-index: 200;
+    min-width: 220px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    display: none;
+  }
+
+  .col-dropdown.open { display: block; }
+  .col-dropdown-title { font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+
+  .col-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 4px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .col-option:hover { background: var(--surface); }
+  .col-option input { accent-color: var(--accent); cursor: pointer; }
+
+  /* Tooltip */
+  [data-tip] {
+    position: relative;
+    cursor: help;
+  }
+  [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 300;
+  }
+  [data-tip]:hover::after { opacity: 1; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    header { padding: 12px; }
+    .header-stats { display: none; }
+    .logo-text h1 { font-size: 18px; }
+    main { padding: 10px; }
+    .col-toggle { display: none; }
+    table { font-size: 11px; }
+    td, th { padding: 8px 8px; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .nutrient-grid { grid-template-columns: repeat(2, 1fr); }
+    .modal { max-height: 95vh; border-radius: 12px; }
+    .card-macros { grid-template-columns: repeat(2, 1fr); }
+    .card-micros { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 500px) {
+    .controls { flex-direction: column; align-items: stretch; }
+    .search-wrap { max-width: 100%; }
+    .nutrient-picker { display: none; }
+  }
+
+  /* Feature update banner */
+  .feature-banner {
+    background: linear-gradient(90deg, rgba(232,197,71,0.08) 0%, rgba(224,90,43,0.08) 100%);
+    border: 1px solid rgba(232,197,71,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .feature-banner strong { color: var(--accent); }
+  .feature-banner span { flex: 1; }
+
+  .feature-toggle {
+    padding: 4px 10px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+  }
+  .feature-toggle:hover { opacity: 0.85; }
+  .feature-toggle.enabled { background: var(--accent2); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-top">
+      <div class="logo-icon">🌿</div>
+      <div class="logo-text">
+        <h1>NutriBase</h1>
+        <p>Sri Lanka & India Food Composition Table · Per 100g edible portion</p>
+      </div>
+      <div class="header-stats">
+        <div class="stat-chip"><strong id="totalFoods">—</strong> Foods</div>
+        <div class="stat-chip"><strong id="totalGroups">—</strong> Groups</div>
+        <div class="stat-chip">🇱🇰 SL · 🇮🇳 IN</div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="search-wrap">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Search food name, local name, scientific name…">
+      </div>
+      <select id="groupFilter">
+        <option value="">All Groups</option>
+      </select>
+      <select id="formFilter">
+        <option value="">All Forms</option>
+        <option value="Raw">Raw</option>
+        <option value="Cooked-Boiled">Cooked – Boiled</option>
+        <option value="Cooked-Recipe">Cooked – Recipe</option>
+      </select>
+      <select id="countryFilter">
+        <option value="">All Countries</option>
+        <option value="Sri Lanka">🇱🇰 Sri Lanka</option>
+        <option value="India">🇮🇳 India</option>
+        <option value="Both">Both</option>
+      </select>
+      <div class="col-toggle" id="colToggle">
+        <button class="btn-filter" id="colToggleBtn">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+          Columns
+        </button>
+        <div class="col-dropdown" id="colDropdown">
+          <div class="col-dropdown-title">Visible Columns</div>
+          <div id="colOptions"></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:10px;">
+      <div class="nutrient-picker">
+        <span class="nutrient-label">Highlight:</span>
+        <button class="nut-btn active" data-nutrient="energy">Energy</button>
+        <button class="nut-btn" data-nutrient="protein">Protein</button>
+        <button class="nut-btn" data-nutrient="fat">Fat</button>
+        <button class="nut-btn" data-nutrient="carbs">Carbs</button>
+        <button class="nut-btn" data-nutrient="fiber">Fiber</button>
+        <button class="nut-btn" data-nutrient="potassium">Potassium</button>
+        <button class="nut-btn" data-nutrient="calcium">Calcium</button>
+        <button class="nut-btn" data-nutrient="iron">Iron</button>
+        <button class="nut-btn" data-nutrient="vitC">Vit C</button>
+        <button class="nut-btn" data-nutrient="vitA">Vit A</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="feature-banner">
+    <span>✨ <strong>Feature Update Available:</strong> Enable food images to see visuals alongside nutritional data. Images can be added per food item in the detail view.</span>
+    <button class="feature-toggle" id="imgToggle" onclick="toggleImageFeature()">Enable Images</button>
+  </div>
+
+  <div class="results-bar">
+    <div class="results-count">Showing <strong id="shownCount">—</strong> of <strong id="totalCount">—</strong> foods</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div class="view-controls">
+        <button class="view-btn active" id="viewTable" onclick="setView('table')">
+          <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 6a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zm0 6a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z"/></svg>
+          Table
+        </button>
+        <button class="view-btn" id="viewCards" onclick="setView('cards')">
+          <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zm6-6a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2h-2zm0 8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z"/></svg>
+          Cards
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading food composition data…</p>
+  </div>
+
+  <div class="no-results" id="noResults">
+    <div class="no-results-emoji">🔍</div>
+    <h3>No foods found</h3>
+    <p>Try a different search term or adjust your filters.</p>
+  </div>
+
+  <div class="table-wrap" id="tableWrap" style="display:none;">
+    <table id="foodTable">
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="cards-grid" id="cardsGrid"></div>
+
+  <div class="pagination" id="pagination"></div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="foodModal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-subtitle" id="modalSubtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const CSV_DATA = `Food_ID,Food_Name_English,Scientific_Name,Local_Names,Food_Group,Form,Edible_Portion_g_per_100g,Moisture_g,Energy_kcal,Energy_kJ,Protein_g,Total_Fat_g,Saturated_Fat_g,MUFA_g,PUFA_g,Carbohydrate_g,Total_Dietary_Fiber_g,Sugars_g,Ash_g,Vitamin_A_RAE_ug,Vitamin_C_mg,Thiamin_B1_mg,Riboflavin_B2_mg,Niacin_B3_mg,Vitamin_B6_mg,Folate_ug,Vitamin_B12_ug,Vitamin_D_ug,Vitamin_E_mg,Vitamin_K_ug,Calcium_mg,Iron_mg,Zinc_mg,Magnesium_mg,Phosphorus_mg,Potassium_mg,Sodium_mg,Copper_mg,Manganese_mg,Selenium_ug,Cholesterol_mg,Source_Country,Reference,Notes
+SL001,Kekulu Rice (White Raw),Oryza sativa,"Kekulu haal (Si); Pachcharisi (Ta)",Cereals,Raw,100,11.8,357,1494,7.1,0.6,0.17,0.19,0.21,79.5,0.6,0.2,1,0,0,0.08,0.02,1.9,0.16,11,0,0,0.07,0.3,9,0.9,1.7,26,114,83,3,0.21,1.09,9.8,0,Sri Lanka,SL FCT 2021,Short-grain white milled rice
+SL002,Red Raw Rice,Oryza sativa,"Rathu kekulu (Si); Sigappu arisi (Ta)",Cereals,Raw,100,12.2,345,1443,7.5,2,0.55,0.72,0.6,73.8,3.2,0.4,1.3,0,0,0.35,0.04,4.3,0.35,20,0,0,0.72,1.8,14,2.2,2.1,110,257,214,6,0.26,3.21,15.2,0,Sri Lanka,SL FCT 2021,Whole-grain red rice; high Mn and Mg
+SL003,Samba Rice (White),Oryza sativa,"Samba (Si/Ta)",Cereals,Raw,100,12.5,352,1473,7,0.5,0.14,0.16,0.18,78.8,0.5,0.2,1,0,0,0.07,0.02,1.8,0.14,9,0,0,0.06,0.2,8,0.8,1.6,24,108,78,2,0.19,0.98,8.5,0,Sri Lanka,SL FCT 2021,Short fragrant Sri Lankan variety
+SL004,Nadu Rice (White Milled),Oryza sativa,"Nadu (Si/Ta)",Cereals,Raw,100,11.9,358,1498,7.2,0.6,0.16,0.18,0.2,79.2,0.6,0.2,1,0,0,0.08,0.02,1.9,0.15,10,0,0,0.07,0.3,9,0.9,1.7,25,112,80,3,0.2,1.05,9,0,Sri Lanka,SL FCT 2021,Long-grain milled white rice variety
+SL005,Parboiled Rice (White),Oryza sativa,"Suduru samba parboiled (Si); Puzhunga arisi (Ta)",Cereals,Raw,100,12.1,354,1481,7.4,0.7,0.19,0.22,0.23,78.4,0.7,0.3,1.1,0,0,0.21,0.03,3.1,0.28,15,0,0,0.11,0.5,12,1,1.9,35,138,110,4,0.22,1.5,11.2,0,Sri Lanka,SL FCT 2021,Parboiling retains more B vitamins
+SL006,Red Parboiled Rice,Oryza sativa,"Rathu parboiled (Si)",Cereals,Raw,100,12.3,342,1430,7.8,2.1,0.58,0.75,0.63,73,3.5,0.5,1.4,0,0,0.38,0.05,4.5,0.38,22,0,0,0.8,2,16,2.4,2.3,115,265,220,7,0.28,3.4,16,0,Sri Lanka,SL FCT 2021,Whole-grain parboiled red rice
+SL007,Rice (White Cooked),Oryza sativa,"Buth (Si); Sadam (Ta)",Cereals,Cooked-Boiled,100,68.2,130,544,2.7,0.3,0.08,0.09,0.1,28.6,0.3,0.1,0.2,0,0,0.02,0.01,0.5,0.05,3,0,0,0.01,0,3,0.2,0.5,9,37,29,1,0.06,0.35,3.1,0,Sri Lanka,SL FCT 2021,Boiled white rice
+SL008,Red Rice (Cooked),Oryza sativa,"Rathu buth (Si)",Cereals,Cooked-Boiled,100,64.5,137,573,3,0.8,0.22,0.29,0.24,29.5,1.3,0.2,0.5,0,0,0.14,0.02,1.7,0.14,8,0,0,0.29,0.7,6,0.9,0.8,44,103,86,2,0.1,1.28,6.1,0,Sri Lanka,SL FCT 2021,Boiled whole-grain red rice
+SL009,Milk Rice (Kiribath),Oryza sativa,"Kiribath (Si); Paal sadam (Ta)",Cereals,Cooked-Recipe,100,54.2,195,816,4.1,6.8,5.8,0.52,0.18,33.5,0.4,1.8,0.5,4,0,0.04,0.05,0.7,0.07,4,0.1,0,0.09,0.2,14,0.4,0.7,13,48,65,42,0.09,0.45,4.2,3,Sri Lanka,SL FCT 2021,Samba rice in coconut milk; auspicious food
+SL010,String Hoppers (Indi Appa),Oryza sativa,"Indi appa (Si/Ta)",Cereals,Cooked-Recipe,100,60.1,162,678,3.6,0.8,0.35,0.24,0.14,34.5,0.7,0.5,0.3,0,0,0.05,0.03,0.7,0.06,5,0,0,0.03,0.1,8,0.6,0.8,14,52,48,28,0.1,0.38,3.8,0,Sri Lanka,SL FCT 2021,Steamed rice-flour noodle discs
+SL011,Hoppers (Appa/Appam),Oryza sativa,"Appa (Si); Appam (Ta)",Cereals,Cooked-Recipe,100,53.8,185,774,4.2,2.5,2.1,0.22,0.08,38,0.6,2.5,0.5,1,0,0.04,0.04,0.6,0.05,4,0.1,0,0.06,0.2,10,0.5,0.7,12,50,58,62,0.08,0.35,3.5,1,Sri Lanka,SL FCT 2021,Fermented rice-flour bowl-shaped pancake
+SL012,Pittu,Oryza sativa,"Pittu (Si/Ta)",Cereals,Cooked-Recipe,100,45.2,220,920,4.8,5.5,4.7,0.45,0.16,42,1.5,1.2,0.8,2,0,0.04,0.04,0.9,0.07,5,0,0,0.05,0.2,12,0.8,0.9,20,60,85,32,0.12,0.48,4,0,Sri Lanka,SL FCT 2021,Steamed rice-flour and coconut cylinder
+SL013,Kottu Roti,Triticum aestivum,"Kottu roti (Si/Ta)",Cereals,Cooked-Recipe,100,52.5,198,828,8.2,7.5,2.8,2.85,1.2,28.8,1.9,2.2,1.5,45,2.8,0.1,0.12,2.5,0.18,22,0.3,0.2,0.55,8.5,58,2.1,1.2,28,118,195,420,0.12,0.52,6.8,38,Sri Lanka,SL FCT 2021,Chopped roti stir-fried with egg vegetables spices
+IN001,Basmati Rice (Raw),Oryza sativa,"Basmati chawal (Hi); Basmati (various)",Cereals,Raw,100,11.9,349,1460,8.5,0.7,0.2,0.24,0.22,78.3,0.4,0.2,1.1,0,0,0.07,0.02,1.8,0.15,9,0,0,0.08,0.4,8,0.8,1.8,28,120,90,4,0.18,1.15,10.5,0,India,IFCT 2017,Long-grain aromatic rice
+IN002,Rice (Brown Raw),Oryza sativa,"Bhura chawal (Hi)",Cereals,Raw,100,12,341,1427,7.9,2.7,0.55,0.99,0.96,73,3.5,0.7,1.4,0,0,0.41,0.09,4.9,0.51,20,0,0,0.83,2,23,1.8,2,143,264,264,7,0.28,3.55,19.4,0,India,IFCT 2017,Whole-grain brown rice; high Mn Mg P
+IN003,Wheat Whole Grain,Triticum aestivum,"Gehun (Hi); Godhambu (Ta)",Cereals,Raw,100,12.8,339,1419,11.8,1.5,0.26,0.22,0.65,69.4,11.2,0.4,1.7,0,0,0.46,0.17,4.6,0.42,41,0,0,1.01,1.9,48,5,2.9,144,306,363,2,0.43,3.99,70.7,0,India,IFCT 2017,Whole wheat; high fiber folate iron zinc
+IN004,Wheat Flour Refined (Maida),Triticum aestivum,"Maida (Hi/Ta/Si)",Cereals,Raw,100,13.2,348,1456,10,0.9,0.14,0.12,0.39,74.6,2.7,0.3,0.5,0,0,0.1,0.06,0.9,0.06,18,0,0,0.14,0.2,23,2.1,0.7,19,108,149,2,0.13,0.78,26.2,0,India,IFCT 2017,Refined wheat flour; low fiber
+IN005,Ragi / Finger Millet,Eleusine coracana,"Ragi (Ka/Te); Kelvaragu (Ta); Kurakkan (Si)",Cereals,Raw,100,13.1,328,1372,7.3,1.5,0.29,0.46,0.54,72,11.5,1.5,2.6,0,0,0.42,0.19,1.1,0.05,18,0,0,0.05,0.6,344,3.9,2.5,146,283,408,11,0.47,5.49,2.8,0,India,IFCT 2017,Exceptionally high calcium (344 mg); gluten-free
+IN006,Pearl Millet / Bajra,Pennisetum glaucum,"Bajra (Hi); Kambu (Ta); Sajje (Ka)",Cereals,Raw,100,11.1,361,1510,10.6,5,0.93,1.83,1.97,67.5,1.3,0.7,1.9,5,0,0.38,0.21,2.8,0.38,45,0,0,0.09,1,42,8,3.1,137,296,307,10,1.06,1.55,2.7,0,India,IFCT 2017,High iron (8 mg) and zinc
+IN007,Sorghum / Jowar,Sorghum bicolor,"Jowar (Hi); Cholam (Ta); Jola (Ka)",Cereals,Raw,100,11.2,349,1460,10.4,1.9,0.36,0.73,0.68,70.7,6.7,0.9,1.6,5,0,0.37,0.15,3.1,0.44,20,0,0,0.49,0.9,25,4.1,1.6,165,287,350,5,0.28,1.59,4,0,India,IFCT 2017,Gluten-free grain; high fiber and tannins
+IN008,Foxtail Millet,Setaria italica,"Thinai (Ta); Navane (Ka); Korralu (Te)",Cereals,Raw,100,12.5,331,1385,12.3,4.3,0.67,1.58,1.67,63.2,8,1.1,3.3,0,0,0.59,0.11,3.2,0.24,15,0,0,0.29,4,31,2.8,2.4,81,290,250,4,0.62,1.42,2.3,0,India,IFCT 2017,High-protein millet; good amino-acid profile
+IN009,Oats (Rolled),Avena sativa,"Jai (Hi); Oats (various)",Cereals,Raw,100,8.2,379,1586,13.2,6.9,1.22,2.18,2.54,66.3,10.1,1,1.7,0,0,0.76,0.14,1,0.12,56,0,0,0.42,2,54,4.7,3.9,177,523,429,2,0.63,3.63,28.9,0,India,IFCT 2017,High beta-glucan fiber; cholesterol-lowering
+IN010,Maize Dry,Zea mays,"Makka jowar (Hi); Makka cholam (Ta)",Cereals,Raw,100,12.2,342,1431,8.8,3.5,0.49,0.94,1.64,73,2.7,3.2,1.2,17,0,0.38,0.2,3.6,0.62,19,0,0,0.49,0.3,10,2.7,2.3,127,348,315,35,0.31,0.49,15.4,0,India,IFCT 2017,Dry maize; high carotenoids as provitamin A
+IN180,Poha / Flattened Rice,Oryza sativa,"Poha (Hi); Aval (Ta)",Cereals,Raw,100,11.5,346,1448,7.8,1.2,0.32,0.43,0.37,78.8,1.6,0.8,1.4,0,0,0.06,0.06,4.1,0.2,16,0,0,0.1,0.5,14,1.4,1.2,34,134,130,8,0.26,1.6,8.5,0,India,IFCT 2017,Flattened beaten rice; quick-cooking
+IN181,Semolina / Sooji,Triticum durum,"Sooji/Rava (Hi); Ravai (Ta)",Cereals,Raw,100,12.7,360,1506,12.7,1,0.14,0.13,0.44,72.8,3.9,0.4,0.8,0,0,0.28,0.08,2.8,0.1,72,0,0,0.32,0.6,17,4.4,1.4,47,136,186,1,0.26,0.62,52.6,0,India,IFCT 2017,Durum wheat semolina; high selenium
+SL020,Dhal Curry (Red Lentil),Lens culinaris,"Parippu curry (Si/Ta)",Cooked Dishes,Cooked-Recipe,100,75.8,98,410,6.5,2.8,2.35,0.25,0.08,11.5,2.2,1.5,1.2,12,2.1,0.08,0.07,1,0.1,25,0,0,0.22,2.5,42,1.8,0.8,22,85,175,280,0.12,0.38,2.8,0,Sri Lanka,SL FCT 2021,Cooked red lentil curry with coconut milk and spices
+IN020,Red Lentil / Masoor Dal Raw,Lens culinaris,"Masoor dal (Hi); Mysore paruppu (Ta)",Pulses,Raw,100,11.8,340,1422,25.1,0.7,0.09,0.16,0.32,59,7.9,2.4,2.5,3,1.5,0.51,0.31,2.6,0.54,204,0,0,0.08,1.8,68,7.6,3.3,72,367,779,38,0.52,1.34,8.9,0,India,IFCT 2017,Split husked red lentil; very high folate and protein
+IN021,Chickpea / Bengal Gram Whole,Cicer arietinum,"Chana (Hi); Kadalai (Ta); Kadala (Si)",Pulses,Raw,100,9.8,372,1557,17.1,5.3,0.55,1.29,2.39,60.9,17.4,10.7,2.7,3,4,0.48,0.21,1.5,0.54,340,0,0,0.35,9,202,4.6,3.4,138,331,830,24,0.87,2.02,8.2,0,India,IFCT 2017,High fiber and folate; good iron source
+IN022,Black-eyed Pea / Cowpea,Vigna unguiculata,"Lobia (Hi); Karamani (Ta); Me karal (Si)",Pulses,Raw,100,10.5,323,1351,23.5,1.3,0.34,0.1,0.74,57.3,10.6,3.3,3.4,1,1.5,0.74,0.18,1.8,0.36,633,0,0,0.35,4,110,8.4,3.4,203,418,1100,58,0.79,1.65,5,0,India,IFCT 2017,Exceptionally high folate (633 ug); good protein
+IN023,Green Gram / Mung Bean Whole,Vigna radiata,"Moong (Hi); Pachai payaru (Ta); Mung (Si)",Pulses,Raw,100,10.4,334,1397,24,1.2,0.35,0.14,0.54,59.9,8.1,6.6,3.5,2,4.8,0.62,0.15,2.1,0.19,625,0,0,0.26,9,124,4.4,2.7,189,367,1246,15,0.94,1.11,8.8,0,India,IFCT 2017,High folate; sprouted increases vitamin C
+IN024,Black Gram / Urad Dal,Vigna mungo,"Urad (Hi); Ulunthu (Ta); Undu (Si)",Pulses,Raw,100,10.8,341,1427,25.2,1.6,0.43,0.18,0.75,58.9,18.3,1.3,3.2,4,0,0.42,0.24,1.5,0.27,216,0,0,0.2,13.5,154,7.6,3.4,267,385,983,38,0.98,1.56,17.8,0,India,IFCT 2017,Base of idli/dosa batter; high calcium and Mg
+IN025,Pigeon Pea / Toor Dal,Cajanus cajan,"Toor dal (Hi); Thuvaram paruppu (Ta); Thora (Si)",Pulses,Raw,100,10.6,335,1401,22.3,1.7,0.43,0.42,0.67,57.6,15,3.5,3.4,0,0,0.72,0.24,2.9,0.07,456,0,0,0.19,3.5,73,5.8,2.8,183,304,1392,17,1.34,1.79,8.8,0,India,IFCT 2017,Highest folate among common dals (456 ug)
+SL021,Jackfruit Seed Boiled,Artocarpus heterophyllus,"Kos ata (Si); Pala vithai (Ta)",Pulses,Cooked-Boiled,100,70.5,115,481,3.6,0.5,0.11,0.12,0.18,24.8,1.5,0.8,0.6,2,6,0.18,0.08,1.4,0.12,14,0,0,0.25,0.5,28,0.7,0.6,29,86,246,4,0.15,0.52,1.5,0,Sri Lanka,SL FCT 2021,Boiled jackfruit seeds; good resistant starch
+IN170,Tofu Plain,Glycine max,"Tofu (various)",Pulses,Raw,100,84.5,76,318,8.1,4.2,0.61,0.94,2.39,1.9,0.3,0.3,0.5,0,0.3,0.07,0.05,0.2,0.1,15,0,0,0.01,2,138,1.6,1,37,111,150,7,0.19,0.6,13.2,0,India,IFCT 2017,Soybean curd; good plant protein
+IN171,Soybean Dry,Glycine max,"Soya (Hi); Soya bean (various)",Pulses,Raw,100,8.5,432,1808,36.5,19.9,2.88,4.4,11.26,30.2,9.3,7.3,4.9,1,6,0.87,0.87,1.6,0.38,375,0,0,1.95,47,277,9.7,4.9,280,704,1797,2,1.66,2.52,17.8,0,India,IFCT 2017,Highest protein of all legumes
+SL030,Gotu Kola Raw,Centella asiatica,"Gotu kola (Si); Vallarai (Ta)",Green Leafy Vegetables,Raw,100,88.5,35,146,2.9,0.6,0.13,0.12,0.24,5.2,2.5,1.2,2.8,391,9.2,0.15,0.19,1.5,0.15,105,0,0,1.02,180,171,5.6,0.8,22,30,391,53,0.32,0.41,0.8,0,Sri Lanka,SL FCT 2021,High vitamin K; medicinal herb
+SL031,Mukunuwenna / Alternanthera,Alternanthera sessilis,"Mukunuwenna (Si); Ponnanganni (Ta)",Green Leafy Vegetables,Raw,100,87.2,41,172,3.5,0.6,0.12,0.1,0.2,5.5,3.8,1.1,3.2,480,28,0.09,0.25,1.3,0.18,42,0,0,2.1,210,220,6.8,0.7,108,52,398,38,0.28,1.25,2.2,0,Sri Lanka,SL FCT 2021,Exceptional beta-carotene and vitamin K
+SL032,Kankun / Water Spinach,Ipomoea aquatica,"Kankun (Si); Kangkung (Ta)",Green Leafy Vegetables,Raw,100,91.7,19,79,2.6,0.2,0.04,0.03,0.09,3.1,1.8,0.8,2.4,315,55,0.07,0.21,0.9,0.1,57,0,0,1.8,195,77,1.7,0.3,71,39,312,113,0.18,0.42,0.9,0,Sri Lanka,SL FCT 2021,High vitamin C; aquatic leafy green
+SL033,Gotukola Sambol,Centella asiatica,"Gotukola sambol (Si/Ta)",Green Leafy Vegetables,Cooked-Recipe,100,81.2,78,326,3.8,5.5,4.68,0.45,0.16,6.8,2.2,1.8,2.5,185,7.5,0.12,0.16,1.2,0.12,82,0,0,1.45,145,128,4.5,0.7,18,28,298,105,0.25,0.33,0.6,0,Sri Lanka,SL FCT 2021,Traditional salad with grated coconut lime and chilli
+SL034,Mallung Mixed Greens,Various,"Mallung (Si/Ta)",Green Leafy Vegetables,Cooked-Recipe,100,80.5,85,356,4.2,4.2,3.55,0.38,0.14,8.5,3.1,1.5,2.8,410,22.5,0.1,0.22,1.3,0.16,85,0,0,1.85,175,195,4.8,0.8,95,55,380,102,0.28,0.92,1.5,0,Sri Lanka,SL FCT 2021,Stir-fried shredded greens with grated coconut
+IN030,Amaranth Leaves,Amaranthus tricolor,"Chaulai (Hi); Araikkeerai (Ta); Tampala (Si)",Green Leafy Vegetables,Raw,100,85.7,45,188,4,0.5,0.09,0.07,0.17,6.5,2.7,0.9,3.3,730,80,0.06,0.36,1.4,0.19,85,0,0,2.2,1140,397,3.9,0.9,55,52,611,20,0.19,0.89,0.9,0,India,IFCT 2017,Exceptional beta-carotene vitamin C and K; iron-rich
+IN031,Fenugreek Leaves,Trigonella foenum-graecum,"Methi (Hi); Vendhaya keerai (Ta)",Green Leafy Vegetables,Raw,100,86.1,49,205,4.4,0.9,0.19,0.14,0.35,6,3.9,2,2.6,57,220,0.04,0.36,0.8,0.29,120,0,0,0.54,12,395,16.5,0.8,68,62,678,76,0.46,0.79,0.6,0,India,IFCT 2017,Very high iron (16.5 mg) and vitamin C
+IN032,Spinach / Palak,Spinacia oleracea,"Palak (Hi); Pasalai keerai (Ta)",Green Leafy Vegetables,Raw,100,91.4,26,109,2,0.4,0.06,0.03,0.16,3.6,2.2,0.4,1.8,469,28.1,0.08,0.19,0.7,0.2,194,0,0,2.03,483,99,1.1,0.5,79,49,558,79,0.13,0.9,1,0,India,IFCT 2017,High folate vitamin K and beta-carotene
+IN033,Drumstick Leaves / Moringa,Moringa oleifera,"Murungai keerai (Ta); Murunga (Si)",Green Leafy Vegetables,Raw,100,75.9,92,385,6.7,1.7,0.35,0.41,0.6,12.5,2,3.2,2.3,378,220,0.25,0.66,2.2,1.2,40,0,0,8.28,141.5,440,28.2,0.6,147,112,337,9,0.57,0.36,8.2,0,Both,IFCT 2017,Exceptionally nutritious; very high calcium and vitamins
+SL040,Bitter Gourd / Karela,Momordica charantia,"Karawila (Si); Pavakkai (Ta)",Other Vegetables,Raw,100,93.2,17,71,1,0.2,0.03,0.02,0.08,3.7,2.8,1.6,0.9,24,84,0.04,0.04,0.4,0.04,72,0,0,0.14,4.8,20,0.4,0.8,17,31,296,5,0.08,0.09,0.2,0,Both,SL FCT 2021,Hypoglycaemic properties; high vitamin C
+SL041,Jackfruit Unripe Raw,Artocarpus heterophyllus,"Polos (Si); Pala (Ta)",Other Vegetables,Raw,100,77.2,95,397,1.5,0.3,0.07,0.06,0.12,23.2,1.5,17.1,0.8,5,6.7,0.03,0.04,0.4,0.11,14,0,0,0.34,0.5,34,0.6,0.4,37,21,303,3,0.08,0.04,0.6,0,Sri Lanka,SL FCT 2021,Young unripe jackfruit used as vegetable
+IN040,Tomato Red,Solanum lycopersicum,"Tamatar (Hi); Thakkali (Ta)",Other Vegetables,Raw,100,93.5,18,75,0.9,0.2,0.03,0.03,0.08,3.9,1.2,2.6,0.5,38,27,0.06,0.04,0.6,0.08,15,0,0,0.54,7.9,13,0.4,0.2,11,24,237,5,0.07,0.11,0.4,0,Both,IFCT 2017,Lycopene-rich; widely used
+IN041,Onion Common,Allium cepa,"Pyaz (Hi); Vengayam (Ta); Lunu (Si)",Other Vegetables,Raw,100,88.7,40,167,1.2,0.1,0.02,0.01,0.04,9.3,1.7,4.2,0.5,0,7.4,0.04,0.03,0.2,0.12,19,0,0,0.02,0.5,36,0.4,0.2,10,36,146,4,0.06,0.13,0.5,0,Both,IFCT 2017,Quercetin-rich; allicin precursors
+IN042,Garlic,Allium sativum,"Lehsun (Hi); Poondu (Ta); Sudu lunu (Si)",Spices,Raw,100,58.6,149,623,6.4,0.5,0.09,0.02,0.22,33.1,2.1,1,1.5,0,31.2,0.2,0.11,0.7,1.24,3,0,0,0.08,1.7,181,1.7,1.2,25,153,401,17,0.3,1.67,14.2,0,Both,IFCT 2017,Allicin precursor; antimicrobial
+IN043,Brinjal / Eggplant,Solanum melongena,"Baingan (Hi); Kathirikkai (Ta); Vambatu (Si)",Other Vegetables,Raw,100,92.5,25,105,1.4,0.3,0.05,0.03,0.13,4.5,2.5,2.2,0.9,3,2.5,0.08,0.04,0.8,0.09,22,0,0,0.3,3.5,18,0.4,0.2,14,47,200,3,0.08,0.25,0.3,0,Both,IFCT 2017,Anthocyanin-rich skin; moderate folate
+IN044,Okra / Lady Finger,Abelmoschus esculentus,"Bhindi (Hi); Vendaikkai (Ta); Bandakka (Si)",Other Vegetables,Raw,100,88.6,36,151,2.1,0.2,0.04,0.02,0.1,7.5,3.2,1.5,0.9,36,23,0.2,0.06,1,0.22,60,0,0,0.27,31.3,66,0.6,0.5,57,63,303,8,0.09,1.53,0.7,0,Both,IFCT 2017,Good folate and vitamin K; mucilaginous fiber
+IN045,Pumpkin Yellow,Cucurbita maxima,"Kaddu (Hi); Poosanikai (Ta); Wattakka (Si)",Other Vegetables,Raw,100,91.5,26,109,1,0.1,0.02,0.01,0.06,6.5,0.5,2.8,0.8,369,9,0.05,0.11,0.6,0.06,16,0,0,1.06,1.1,21,0.8,0.3,12,44,340,1,0.13,0.12,0.3,0,Both,IFCT 2017,High beta-carotene; low calorie
+IN046,Ridge Gourd / Luffa,Luffa acutangula,"Turai (Hi); Peerkangai (Ta); Wetakolu (Si)",Other Vegetables,Raw,100,95,20,84,0.7,0.2,0.04,0.02,0.08,3.4,0.5,1.8,0.5,6,7,0.04,0.03,0.4,0.04,12,0,0,0.1,0.6,18,0.4,0.5,14,28,139,3,0.06,0.08,0.4,0,Both,IFCT 2017,Low calorie cooling vegetable
+SL050,Cassava / Manioc Raw,Manihot esculenta,"Manioc (Si); Maravalli kizhang (Ta)",Roots & Tubers,Raw,100,59.4,160,669,1.4,0.3,0.08,0.07,0.09,38.1,1.8,1.7,0.8,0,36.7,0.09,0.05,0.9,0.09,27,0,0,0.19,1.9,16,0.3,0.3,21,27,271,14,0.1,0.38,0.7,0,Sri Lanka,SL FCT 2021,Important Sri Lankan root vegetable
+SL051,Manioc Boiled,Manihot esculenta,"Manioc (Si); Maravalli kizhang (Ta)",Roots & Tubers,Cooked-Boiled,100,65.8,138,577,1,0.2,0.05,0.05,0.06,32.5,1.5,1.4,0.5,0,20.6,0.07,0.03,0.7,0.07,17,0,0,0.12,1.4,11,0.2,0.2,16,21,212,10,0.07,0.29,0.5,0,Sri Lanka,SL FCT 2021,Boiled cassava; vitamin C partially retained
+SL052,Yam Purple Raw,Dioscorea alata,"Nil ala (Si); Kachil (Ta)",Roots & Tubers,Raw,100,72.7,108,452,1.5,0.2,0.04,0.05,0.06,24.8,4.1,0.5,0.8,3,17.1,0.11,0.03,0.6,0.29,23,0,0,0.35,2.5,18,0.5,0.3,21,55,816,9,0.18,0.45,0.7,0,Sri Lanka,SL FCT 2021,High potassium; purple anthocyanins
+IN050,Sweet Potato Orange,Ipomoea batatas,"Shakarkandi (Hi); Sakkaravalli (Ta); Batala (Si)",Roots & Tubers,Raw,100,72.8,86,360,1.6,0.1,0.02,0.01,0.04,20.1,3,4.2,1,961,2.4,0.08,0.06,0.6,0.29,11,0,0,0.26,1.8,30,0.6,0.3,25,47,337,55,0.15,0.26,0.6,0,Both,IFCT 2017,Exceptionally high beta-carotene in orange variety
+IN051,Potato,Solanum tuberosum,"Aloo (Hi); Urulai (Ta); Ala (Si)",Roots & Tubers,Raw,100,80.7,70,293,1.9,0.1,0.02,0,0.05,16.6,1.6,0.9,0.9,0,17,0.1,0.03,1.4,0.3,16,0,0,0.01,1.8,10,0.7,0.3,23,57,421,6,0.11,0.14,0.3,0,Both,IFCT 2017,High potassium; vitamin C degrades on cooking
+IN052,Elephant Foot Yam,Amorphophallus paeoniifolius,"Suran (Hi); Karunai kizhang (Ta); Ala (Si)",Roots & Tubers,Raw,100,78,79,331,1.2,0.1,0.02,0.01,0.04,19.5,5.1,0.5,0.9,0,5.7,0.09,0.04,0.6,0.19,18,0,0,2.08,0.5,50,0.6,0.5,34,55,816,18,0.22,0.93,0.7,0,India,IFCT 2017,High dietary fiber; anti-diabetic properties claimed
+SL060,Coconut Fresh Flesh,Cocos nucifera,"Pol (Si); Thengai (Ta)",Nuts & Oilseeds,Raw,100,47,354,1481,3.3,33.5,29.7,1.43,0.37,15.2,9,6.8,1,0,3.3,0.07,0.02,0.5,0.05,26,0,0,0.24,0.2,14,1.9,1.1,32,113,356,20,0.44,1.5,10.1,0,Sri Lanka,SL FCT 2021,Rich in MCTs especially lauric acid; cornerstone of Sri Lankan cuisine
+SL061,Coconut Milk First Extraction,Cocos nucifera,"Kiri pol (Si); Thenkai paal (Ta)",Nuts & Oilseeds,Raw,100,67.6,230,962,2.3,24,21.34,1.03,0.27,5.5,2.2,3.2,0.5,0,2.8,0.03,0,0.8,0.04,16,0,0,0.1,0.1,16,1.5,0.7,37,100,263,15,0.32,1.21,6,0,Sri Lanka,SL FCT 2021,Thick first-press coconut milk
+SL062,Coconut Milk Thin Second,Cocos nucifera,"Diya kiri (Si)",Nuts & Oilseeds,Raw,100,84,112,469,1.1,11.2,9.93,0.48,0.13,2.8,1,1.9,0.3,0,1.5,0.02,0,0.4,0.02,8,0,0,0.05,0.1,8,0.7,0.3,18,50,130,8,0.15,0.58,3,0,Sri Lanka,SL FCT 2021,Second-press thinner coconut milk
+SL063,Pol Sambol (Coconut Sambol),Cocos nucifera,"Pol sambol (Si); Thengai thuvaiya (Ta)",Cooked Dishes,Cooked-Recipe,100,45.2,365,1527,3.8,34.5,30.6,1.48,0.38,13.5,7.5,5.2,3,18,12.5,0.08,0.04,0.7,0.08,22,0,0,0.3,2.5,22,2.2,1.1,30,108,310,195,0.45,1.42,9.5,0,Sri Lanka,SL FCT 2021,Grated coconut with chilli onion and lime
+SL064,Banana Ambul / Sour Banana,Musa paradisiaca,"Ambul kesel (Si); Pazham (Ta)",Fruits,Raw,100,74.4,89,372,1,0.2,0.07,0.02,0.06,23.4,1.5,12.2,0.8,4,8.7,0.05,0.05,0.6,0.37,14,0,0,0.12,0.5,5,0.3,0.2,27,22,358,1,0.08,0.27,1,0,Sri Lanka,SL FCT 2021,Local sour banana variety; slightly higher fiber
+SL065,Banana Kolikuttu Sweet,Musa paradisiaca,"Kolikuttu kesel (Si)",Fruits,Raw,100,72.8,92,385,1.2,0.3,0.1,0.03,0.08,24.5,1.2,13.8,0.7,6,10.5,0.05,0.06,0.7,0.4,16,0,0,0.15,0.6,6,0.4,0.2,30,24,370,1,0.09,0.3,1.1,0,Sri Lanka,SL FCT 2021,Sweet banana common in Sri Lanka
+SL066,Woodapple,Limonia acidissima,"Divul (Si); Vilam (Ta)",Fruits,Raw,100,64.2,134,561,7.1,3.7,0.85,0.42,0.82,18,5,9.4,2,55,6,0.21,0.19,1.9,0.09,34,0,0,0.9,3,130,0.6,0.8,38,110,600,7,0.25,0.55,0.8,0,Sri Lanka,SL FCT 2021,Extremely high potassium and protein for a fruit
+SL067,Rambutan,Nephelium lappaceum,"Rambutan (Si/Ta)",Fruits,Raw,100,78,82,343,0.9,0.2,0.06,0.04,0.07,20.9,0.9,19.5,0.4,0,4.9,0.01,0.02,1.4,0.02,8,0,0,0.05,0,22,0.4,0.1,7,9,42,11,0.07,0.34,1,0,Sri Lanka,SL FCT 2021,Tropical fruit; moderate vitamin C
+SL068,Mango Local Sri Lankan,Mangifera indica,"Amba (Si); Manga (Ta)",Fruits,Raw,100,83.5,60,251,0.8,0.4,0.1,0.15,0.07,14.8,1.6,13.7,0.4,38,36.4,0.06,0.06,0.7,0.13,43,0,0,0.9,4.2,11,0.2,0.1,10,14,168,2,0.11,0.06,0.6,0,Sri Lanka,SL FCT 2021,Ripe mango; high beta-carotene and vitamin C
+SL069,Jackfruit Ripe,Artocarpus heterophyllus,"Waraka (Si); Palam pala (Ta)",Fruits,Raw,100,73.5,98,410,1.7,0.6,0.14,0.13,0.18,23.2,1.6,19.1,0.9,25,13.8,0.11,0.11,0.4,0.33,24,0,0,0.34,4,34,0.6,0.4,37,21,303,3,0.08,0.22,0.6,0,Sri Lanka,SL FCT 2021,Ripe sweet jackfruit; reasonable potassium
+IN060,Mango Alphonso,Mangifera indica,"Hapus (Ma); Alphonso (various)",Fruits,Raw,100,81.7,74,310,0.6,0.4,0.09,0.15,0.07,17,1.8,14.8,0.4,54,44.8,0.08,0.06,0.9,0.13,43,0,0,1.8,4.8,14,0.2,0.1,10,11,156,2,0.11,0.08,0.8,0,India,IFCT 2017,Premium variety; higher beta-carotene
+IN061,Papaya Ripe,Carica papaya,"Papita (Hi); Pappali (Ta); Papol (Si)",Fruits,Raw,100,88.1,42,176,0.6,0.1,0.02,0.03,0.03,10.8,1.7,7.8,0.6,47,62,0.04,0.05,0.3,0.1,38,0,0,0.3,2.6,20,0.5,0.1,21,13,257,8,0.04,0.03,0.6,0,Both,IFCT 2017,High beta-carotene and vitamin C; digestive enzyme papain
+IN062,Guava,Psidium guajava,"Amrood (Hi); Koyyapazhom (Ta); Pera (Si)",Fruits,Raw,100,80.1,68,284,2.6,1,0.28,0.09,0.4,14.3,5.4,8.9,0.9,31,228,0.07,0.04,1.2,0.11,49,0,0,0.73,2.6,18,0.3,0.2,22,40,417,2,0.23,0.15,0.6,0,Both,IFCT 2017,Exceptionally high vitamin C (228 mg); high fiber
+IN063,Pineapple,Ananas comosus,"Ananas (Hi); Annasi (Ta); Anasi (Si)",Fruits,Raw,100,86,50,209,0.5,0.1,0.01,0.03,0.04,13.1,1.4,9.9,0.3,3,47.8,0.08,0.03,0.5,0.11,18,0,0,0.02,0.7,13,0.3,0.1,12,8,109,1,0.11,1.59,0.1,0,Both,IFCT 2017,Bromelain enzyme; high manganese
+IN064,Sapodilla / Chikoo,Manilkara zapota,"Chikoo (Hi); Sapota (Ta); Sapukesel (Si)",Fruits,Raw,100,77.9,94,393,0.4,1.1,0.55,0.3,0.02,19.9,5.6,16.5,0.7,2,14.7,0,0.02,0.2,0.04,14,0,0,0.43,0,21,0.8,0.1,12,12,193,12,0.09,0.1,0.5,0,Both,IFCT 2017,High dietary fiber; moderate iron
+IN070,Groundnut / Peanut Raw,Arachis hypogaea,"Moongphali (Hi); Nilakadalai (Ta); Kadala (Si)",Nuts & Oilseeds,Raw,100,5.2,567,2372,25.7,49.2,9.68,24.43,15.56,16.1,8.5,4,2.3,0,0,0.64,0.13,12.9,0.35,240,0,0,8.33,0,92,2.5,3.3,168,376,705,18,1.14,1.93,7.2,0,Both,IFCT 2017,Very high niacin; good folate and vitamin E
+IN071,Sesame Seeds White,Sesamum indicum,"Til (Hi); Ellu (Ta); Thala (Si)",Nuts & Oilseeds,Raw,100,4.7,573,2397,18,50.9,7.16,19.37,22.32,23.5,11.8,0.3,4.5,0,0,0.79,0.25,4.5,0.79,97,0,0,0.25,0,975,14.6,7.8,351,629,468,11,4.08,2.46,34.4,0,Both,IFCT 2017,Exceptional calcium (975 mg); high iron and zinc
+IN072,Cashew Nut Raw,Anacardium occidentale,"Kaju (Hi); Mundhiri (Ta); Kaju (Si)",Nuts & Oilseeds,Raw,100,5.2,553,2314,18.2,43.8,7.78,24.49,7.84,30.2,3.3,5.9,2.6,0,0,0.42,0.06,1.1,0.42,69,0,0,0.9,34.1,37,6.7,5.8,260,490,565,12,2.22,1.66,19.9,0,Both,IFCT 2017,High magnesium zinc and copper
+IN172,Flaxseed / Linseed,Linum usitatissimum,"Alsi (Hi); Ali virai (Ta)",Nuts & Oilseeds,Raw,100,5.2,534,2234,18.3,42.2,3.66,7.53,28.73,28.9,27.3,1.6,3.4,0,0.6,1.64,0.16,3.1,0.47,87,0,0,0.31,4.3,255,5.7,4.3,392,642,813,30,1.22,2.48,25.4,0,India,IFCT 2017,Highest plant omega-3 ALA; very high fiber
+IN073,Coconut Oil,Cocos nucifera,"Nariyel tel (Hi); Thengai ennai (Ta); Pol thel (Si)",Fats & Oils,Raw,100,0,884,3699,0,100,86.5,5.8,1.8,0,0,0,0,0,0,0,0,0,0,0,0,0,0.1,0.5,1,0,0,0,0,0,0,0,0,0,0,Both,IFCT 2017,Over 86% saturated fat; lauric acid C12 approx 45%
+IN074,Mustard Oil,Brassica juncea,"Sarson tel (Hi); Kadugu ennai (Ta)",Fats & Oils,Raw,100,0,884,3699,0,100,11.6,59.2,21.2,0,0,0,0,0,0,0,0,0,0,0,0,0,17.8,0,0,0,0,0,0,0,0,0,0,0,India,IFCT 2017,High erucic acid mustard oil; high MUFA
+SL080,Curry Leaf Fresh,Murraya koenigii,"Karapincha (Si); Karuvepillai (Ta)",Spices,Raw,100,63.8,108,452,6.1,1,0.22,0.19,0.34,16,6.4,0.9,4.2,725,4,0.08,0.21,2.3,0.15,93,0,0,0.9,205,830,0.9,0.2,44,57,889,80,0.1,0.17,0.8,0,Both,SL FCT 2021,Exceptional calcium (830 mg); vitamin K and beta-carotene
+SL081,Chilli Red Dried,Capsicum annuum,"Miris (Si); Milagai (Ta); Lal mirchi (Hi)",Spices,Raw,100,10,319,1335,14.4,16.8,3.26,2.75,8.37,49.7,21.1,10.3,6,1484,76.4,0.33,0.92,8.8,2.45,106,0,0,29.83,80.3,148,34.1,2.5,171,300,1870,30,0.82,2,2.9,0,Both,IFCT 2017,Very high capsaicin; exceptional iron and vitamin C
+SL082,Turmeric Dried,Curcuma longa,"Kaha (Si); Manjal (Ta); Haldi (Hi)",Spices,Raw,100,8.9,390,1632,9.4,8.9,3.12,1.65,2.17,65,21.1,3.2,7.8,0,25.9,0.15,0.23,5.1,1.8,39,0,0,3.1,13.4,168,47.5,4.4,193,268,2525,38,0.6,7.83,4.5,0,Both,IFCT 2017,Curcumin anti-inflammatory; very high iron and Mn
+SL083,Coriander Dried,Coriandrum sativum,"Koththamalli (Si); Kothamalli (Ta); Dhaniya (Hi)",Spices,Raw,100,8.9,298,1247,12.4,17.8,1.95,13.57,1.75,55,41.9,0,5.9,0,21,0.24,0.29,2.1,0.41,274,0,0,2.5,310,709,16.3,4.9,330,409,1267,35,0.87,1.9,26.2,0,Both,IFCT 2017,Exceptional calcium and iron; high vitamin K
+SL084,Cinnamon Dried,Cinnamomum verum,"Kurundu (Si); Karuvapatai (Ta); Dalchini (Hi)",Spices,Raw,100,9.5,261,1092,3.9,3.2,0.35,0.26,0.04,79.9,53.1,2.2,1.6,15,3.8,0.02,0.06,1.3,0.16,6,0,0,2.32,31.2,1002,8.3,1.8,60,64,431,10,0.34,17.47,3.1,0,Sri Lanka,SL FCT 2021,Sri Lankan true cinnamon; high calcium (1002 mg)
+IN080,Fenugreek Seeds,Trigonella foenum-graecum,"Methi (Hi); Vendhayam (Ta); Uluhul (Si)",Spices,Raw,100,13.7,333,1393,26.2,5.8,1.46,0.72,0.14,44.1,24.6,0,3,6,3,0.32,0.37,1.6,0.6,57,0,0,0.45,8.8,160,33.5,2.7,191,370,770,67,1.11,1.23,6.3,0,Both,IFCT 2017,Extremely high iron; high fiber; hypoglycaemic properties
+IN081,Black Pepper Dried,Piper nigrum,"Kali mirchi (Hi); Milagu (Ta); Gammiris (Si)",Spices,Raw,100,10.5,255,1067,10.4,3.3,1.39,0.74,0.99,64.8,25.3,0.6,4.3,15,21.1,0.11,0.24,1.1,0.34,17,0,0,1.04,163.7,437,9.7,1.2,171,158,1329,44,1.33,12.75,4.9,0,Both,IFCT 2017,Piperine increases bioavailability of other nutrients
+SL090,Buffalo Curd (Meekiri),Bubalus bubalis,"Meekiri (Si); Erumai thayir (Ta)",Milk Products,Raw,100,82.9,117,490,4.5,8,5.03,2.1,0.23,4.5,0,3.5,0.6,65,1,0.04,0.19,0.3,0.05,12,0.4,0.1,0.1,0.3,168,0.2,0.5,18,112,145,52,0.03,0.01,4.5,28,Sri Lanka,SL FCT 2021,Traditional Sri Lankan buffalo curd; set in clay pots
+SL091,Coconut Treacle Kithul,Caryota urens,"Kithul pani (Si); Kithal panang karkan (Ta)",Sugars,Raw,100,18.2,320,1339,0.3,0.1,0.05,0.03,0.02,80.8,0,75.5,0.6,0,0,0.04,0.08,0.4,0.02,0,0,0,0.12,0,182,3.5,0.4,18,16,256,22,0.18,0.52,1.2,0,Sri Lanka,SL FCT 2021,Kithul palm treacle; high iron (3.5 mg)
+IN090,Cow Milk Whole,Bos taurus,"Doodh (Hi); Paal (Ta); Kiri (Si)",Milk Products,Raw,100,88.1,68,285,3.3,4,2.37,1.1,0.12,4.7,0,4.7,0.7,46,1.5,0.04,0.17,0.1,0.04,5,0.4,0.1,0.11,0.3,123,0.1,0.4,13,97,160,48,0.01,0.01,2,11,India,IFCT 2017,Whole cow milk; good calcium and B12
+IN091,Yogurt Plain Low Fat,Bos taurus,"Dahi (Hi); Tayir (Ta)",Milk Products,Raw,100,85.7,63,264,5.3,1.5,0.97,0.41,0.04,7,0,4,1,14,0.5,0.05,0.22,0.1,0.06,11,0.6,0.1,0.05,0.2,183,0.1,0.9,17,152,234,70,0.01,0.01,3.3,6,India,IFCT 2017,Fermented yogurt; high calcium and B12; probiotics
+IN092,Paneer Indian Cottage Cheese,Bos taurus,"Paneer (Hi/various)",Milk Products,Raw,100,53.4,265,1109,18.3,20.8,13.07,5.74,0.63,1.2,0,0.8,2.3,160,0,0.01,0.36,0.1,0.08,7,0.8,0.1,0.21,0.3,480,0.2,2.6,22,414,102,27,0.02,0.01,14.6,66,India,IFCT 2017,High protein and calcium; vegetarian protein source
+SL100,Hen Egg Whole Raw,Gallus domesticus,"Bittara (Si); Muttai (Ta)",Eggs,Raw,100,76.1,143,599,12.6,9.5,2.95,3.66,1.24,1.1,0,0.4,1,160,0,0.09,0.45,0.1,0.17,47,1.2,1,1.05,0.3,56,1.8,1.1,12,172,134,142,0.07,0.03,31.7,373,Both,SL FCT 2021,Excellent B12 source; high-quality complete protein
+SL101,Hen Egg Whole Boiled,Gallus domesticus,"Bittara (Si); Muttai (Ta)",Eggs,Cooked-Boiled,100,74.6,155,649,12.6,10.6,3.28,4.08,1.38,1.1,0,0.4,1,149,0,0.07,0.44,0.1,0.14,44,1.2,1,1.03,0.3,50,1.2,1.1,10,172,126,124,0.06,0.03,30.8,373,Both,SL FCT 2021,Hard-boiled egg; slight increase in fat percentage
+SL110,Chicken Broiler Flesh Raw,Gallus domesticus,"Kukul mas (Si); Kozhi (Ta)",Poultry,Raw,100,74.5,148,619,18.5,8.1,2.26,3.38,1.93,0,0,0,0.9,32,0,0.07,0.13,5.6,0.4,5,0.3,0.1,0.27,2.5,11,0.9,1.5,22,173,229,73,0.05,0.02,20.5,70,Both,SL FCT 2021,Raw chicken breast; high niacin and protein
+IN110,Chicken Country Desi Raw,Gallus domesticus,"Desi murgi (Hi); Nattu kozhi (Ta)",Poultry,Raw,100,72.8,155,649,20.1,7.9,2.18,3.3,1.86,0,0,0,1,44,0,0.07,0.16,6.8,0.52,6,0.3,0.2,0.29,3,14,1.2,1.8,25,185,258,85,0.07,0.02,22,68,India,IFCT 2017,Country chicken; slightly higher protein
+SL120,Beef Lean Raw,Bos taurus,"Gon mas (Si); Madu erachi (Ta)",Meat,Raw,100,70.5,172,720,21.8,9.5,3.76,4.08,0.44,0,0,0,1,5,0,0.06,0.22,4.7,0.36,8,2.5,0.1,0.18,2.2,18,2.7,5,22,172,333,64,0.09,0.02,14.2,68,Sri Lanka,SL FCT 2021,Lean beef; high zinc and B12
+SL121,Pork Lean Raw,Sus scrofa,"Ura mas (Si); Panni erachi (Ta)",Meat,Raw,100,71.5,166,694,21.1,9,3.1,4.05,0.89,0,0,0,1.1,5,0,0.8,0.28,5.4,0.46,5,0.8,0.1,0.36,2.2,18,1.1,2.4,22,200,362,62,0.05,0.01,32.4,71,Sri Lanka,SL FCT 2021,High thiamin (0.80 mg) and selenium
+IN120,Mutton / Goat Meat Raw,Capra hircus,"Bakri ka gosht (Hi); Aattu erachi (Ta); Ewu mas (Si)",Meat,Raw,100,70.2,182,762,18.5,12.5,5.25,5.4,0.97,0,0,0,1,7,0,0.12,0.2,5.4,0.15,5,2.5,0.1,0.09,2.8,12,3,5.3,20,175,310,72,0.12,0.02,10.2,65,Both,IFCT 2017,Common in both countries; good B12 and zinc
+SL130,Skipjack Tuna Raw,Katsuwonus pelamis,"Balaya (Si); Katsuwonus (Ta)",Fish & Seafood,Raw,100,71.5,130,544,26,2.1,0.58,0.42,0.52,0,0,0,1.6,30,0,0.08,0.18,11.4,0.78,5,1.8,0.8,1,5.5,30,1.2,0.8,35,280,450,45,0.1,0.02,58.8,48,Sri Lanka,SL FCT 2021,Major tuna species in Sri Lanka; high niacin and selenium
+SL131,Yellowfin Tuna Raw,Thunnus albacares,"Kannadi balaya (Si)",Fish & Seafood,Raw,100,71,108,452,24.4,1,0.27,0.19,0.32,0,0,0,1.3,25,0,0.07,0.14,18.8,0.9,4,2.2,1,0.78,4.2,22,1,0.6,33,244,444,40,0.08,0.01,90.1,38,Sri Lanka,SL FCT 2021,High selenium (90 ug) and niacin
+SL132,Seer Fish / Wahoo Raw,Scomberomorus commerson,"Thora (Si); Vanjirami (Ta)",Fish & Seafood,Raw,100,73.2,123,515,22.8,3.5,0.81,1.52,0.82,0,0,0,1.4,38,0,0.12,0.16,8.3,0.46,8,2,1,0.68,4,36,0.6,0.6,30,258,435,62,0.06,0.02,44.5,55,Sri Lanka,SL FCT 2021,Premium fish; good omega-3; popular in Sri Lanka
+SL133,Dried Fish Sprat (Halmasso),Stolephorus spp.,"Halmasso (Si); Nethili karuvadam (Ta)",Fish & Seafood,Raw,100,16.2,298,1247,59.1,5.5,1.62,1.88,1.4,0,0,0,19.2,10,0,0.05,0.31,14,0.42,18,4.5,2,0.45,5.5,2393,6.2,4.5,175,1485,1108,4620,0.4,0.18,112.5,145,Sri Lanka,SL FCT 2021,Extremely high calcium (2393 mg) from tiny bones
+SL134,Mudfish Freshwater Raw,Channa striata,"Lula (Si); Viral meen (Ta)",Fish & Seafood,Raw,100,75,112,469,22.5,2.8,0.62,0.88,0.58,0,0,0,1.5,28,0,0.06,0.12,4.8,0.22,5,1.2,0.5,0.55,3.2,428,1,1,30,215,385,55,0.05,0.02,25.5,55,Sri Lanka,SL FCT 2021,Very high calcium (428 mg) for a fresh fish
+SL135,Prawn / Shrimp Raw,Penaeus spp.,"Isso (Si); Iraal (Ta)",Fish & Seafood,Raw,100,77.8,80,335,17.2,1.1,0.3,0.25,0.3,0,0,0,2,5,0,0.03,0.03,2,0.11,3,1.2,0.3,0.18,1.5,55,0.5,1.1,35,215,185,190,0.18,0.06,38,152,Sri Lanka,SL FCT 2021,Low calorie; high selenium
+IN130,Indian Mackerel Raw,Rastrelliger kanagurta,"Bangda (Ma); Kanakappu (Ta); Kumbalawa (Si)",Fish & Seafood,Raw,100,72,115,481,21.8,3.5,1.26,1.03,0.65,0,0,0,1.5,55,0,0.06,0.24,5.4,0.5,8,5.8,1.2,0.85,4.5,65,1.4,0.8,28,218,318,78,0.11,0.05,44,75,Both,IFCT 2017,High B12 (5.8 ug); affordable omega-3 source
+IN131,Hilsa / Ilish Raw,Tenualosa ilisha,"Hilsa (Hi); Illish (Be)",Fish & Seafood,Raw,100,68.8,195,816,21.8,12,4,4.82,2.12,0,0,0,1.4,86,0,0.12,0.28,5.6,0.28,8,9.8,1.5,2.14,8.5,181,0.9,1,30,252,369,80,0.08,0.04,28.5,81,India,IFCT 2017,Highest omega-3 among Indian river fish; high B12
+SL191,Maldive Fish Dried Tuna,Katsuwonus pelamis,"Umbalakada (Si); Maldive fish (Ta)",Fish & Seafood,Raw,100,12.5,345,1443,68.2,4.5,1.25,1.54,1.14,0,0,0,15.8,0,0,0.05,0.3,14.5,0.62,8,5.5,1.5,0.55,5.2,145,8.5,5.8,185,1260,1580,3850,0.38,0.15,125,125,Sri Lanka,SL FCT 2021,Fermented cured dried tuna; essential Sri Lankan condiment
+SL140,Fish Curry Coconut Milk Based,Various,"Malu curry (Si); Meen curry (Ta)",Cooked Dishes,Cooked-Recipe,100,72.8,130,544,14.5,7.2,5.8,0.85,0.35,2.8,0.5,1.2,2.2,25,3.5,0.06,0.1,4.5,0.3,8,1.5,0.8,0.55,3.8,28,0.8,0.7,24,180,310,285,0.09,0.06,30.5,38,Sri Lanka,SL FCT 2021,Generic coconut milk fish curry
+SL141,Chicken Curry Sri Lankan Style,Gallus domesticus,"Kukul mas curry (Si); Kozhi curry (Ta)",Cooked Dishes,Cooked-Recipe,100,68.5,165,690,17.2,9.8,4.55,3.42,1.28,3.5,0.8,1.5,1.5,38,4.8,0.07,0.15,4.8,0.35,8,0.3,0.1,0.55,3.8,32,1.5,1.8,22,150,285,340,0.1,0.08,18.5,52,Sri Lanka,SL FCT 2021,Sri Lankan chicken curry with coconut milk and roasted spices
+SL143,Green Jak Curry (Polos),Artocarpus heterophyllus,"Polos curry (Si); Pala curry (Ta)",Cooked Dishes,Cooked-Recipe,100,77.5,88,368,1.8,4.2,3.58,0.38,0.12,14.8,2,5.5,1.5,8,5.5,0.05,0.05,0.5,0.12,15,0,0,0.3,1.5,28,0.8,0.5,25,28,215,185,0.09,0.14,0.8,0,Sri Lanka,SL FCT 2021,Unripe jackfruit curry; vegan meat-substitute texture
+SL144,Breadfruit Curry,Artocarpus altilis,"Del curry (Si)",Cooked Dishes,Cooked-Recipe,100,76.2,98,410,1.2,4.8,4.12,0.4,0.14,16.2,2.5,4.8,1.8,5,5,0.08,0.05,0.7,0.12,18,0,0,0.15,0.8,20,0.5,0.4,22,32,485,210,0.08,0.12,0.5,0,Sri Lanka,SL FCT 2021,Rich in potassium; coconut milk based curry
+SL145,Watalappan,Various,"Watalappan (Si/Ta)",Cooked Dishes,Cooked-Recipe,100,44.5,280,1172,6.5,10.5,7.35,1.85,0.38,38.5,0.5,35,0.8,75,0.5,0.05,0.18,0.5,0.08,22,0.4,0.4,0.28,0.8,88,2.8,0.8,28,118,295,65,0.22,0.38,8.2,102,Sri Lanka,SL FCT 2021,Steamed coconut milk and jaggery pudding with eggs
+SL170,Pol Roti Coconut Flatbread,Triticum aestivum / Cocos nucifera,"Pol roti (Si); Pol rotti (Ta)",Cooked Dishes,Cooked-Recipe,100,35.2,278,1163,5.8,12.5,10.68,0.95,0.28,43.8,2.5,1.8,1.2,2,0.8,0.08,0.06,0.9,0.08,8,0,0,0.15,1.2,18,0.8,0.7,20,68,145,152,0.15,0.48,4.5,0,Sri Lanka,SL FCT 2021,Coconut flatbread griddle-fried; popular Sri Lankan breakfast
+SL171,Lamprais (Lomprijst),Various,"Lamprais (Si)",Cooked Dishes,Cooked-Recipe,100,50.2,225,942,10.5,10.2,4.88,3.55,1.18,28,1.2,2.5,1.5,38,3.5,0.12,0.15,3.8,0.28,15,0.4,0.2,0.62,4.2,32,1.8,1.5,25,138,285,320,0.12,0.45,18.5,35,Sri Lanka,SL FCT 2021,Dutch-Burgher dish: rice with curries ash plantain frikkadels in banana leaf
+SL172,Wambatu Moju Brinjal Pickle,Solanum melongena,"Wambatu moju (Si)",Cooked Dishes,Cooked-Recipe,100,62.5,185,774,2.8,14.2,1.75,5.28,5.88,17.5,3.5,12.8,2.8,8,5,0.08,0.06,1.2,0.1,18,0,0,1.35,4.5,32,0.8,0.5,22,58,285,288,0.12,0.35,0.8,0,Sri Lanka,SL FCT 2021,Fried brinjal pickle with mustard onion and vinegar
+SL190,Seeni Sambol Caramelized Onion,Allium cepa,"Seeni sambol (Si); Vengaya sambal (Ta)",Cooked Dishes,Cooked-Recipe,100,45.8,198,829,3.2,10.5,8.65,1.05,0.28,28.5,2.2,22,2.5,12,8.5,0.06,0.05,0.5,0.1,14,0,0,0.22,2.2,32,1.2,0.4,18,52,228,318,0.1,0.22,0.8,0,Sri Lanka,SL FCT 2021,Caramelized onions with Maldive fish chilli and coconut oil
+SL200,Jak Rice (Dambala),Artocarpus heterophyllus + Oryza sativa,"Dambala (Si)",Cooked Dishes,Cooked-Recipe,100,63.2,152,636,3.2,2.8,2.4,0.25,0.08,29.5,1.8,8.5,1.2,12,8,0.06,0.05,0.6,0.18,15,0,0,0.28,0.8,22,0.5,0.4,22,45,285,188,0.08,0.18,0.5,0,Sri Lanka,SL FCT 2021,Sri Lankan rice cooked with ripe jackfruit pieces
+SL210,Ela Batu Curry Aubergine,Solanum melongena,"Ela batu curry (Si)",Cooked Dishes,Cooked-Recipe,100,80.5,88,368,1.8,5.8,4.98,0.48,0.18,9.8,2.8,4.5,1.8,5,4.5,0.06,0.04,0.7,0.08,16,0,0,0.52,3.8,22,0.5,0.3,18,48,225,225,0.1,0.28,0.5,0,Sri Lanka,SL FCT 2021,Sri Lankan aubergine curry in coconut milk
+SL211,Lunu Dehi Lime Pickle,Citrus aurantiifolia,"Lunu dehi (Si); Elumichai oorugai (Ta)",Cooked Dishes,Cooked-Recipe,100,64.5,62,259,1.2,0.5,0.1,0.11,0.15,12.5,3.2,6.8,21.8,5,28.5,0.04,0.02,0.3,0.05,8,0,0,0.24,1.5,82,0.5,0.2,10,15,138,4550,0.05,0.04,0.3,0,Sri Lanka,SL FCT 2021,Fermented salted lime pickle; extremely high sodium (4550 mg)
+IN140,Idli Steamed Rice-Lentil Cake,Oryza sativa / Vigna mungo,"Idli (Ta/Ka/Te)",Cooked Dishes,Cooked-Recipe,100,60.5,132,552,4.5,0.4,0.06,0.1,0.17,27.8,1.3,0.5,0.6,0,0,0.04,0.03,0.4,0.04,8,0,0,0.05,0.2,14,0.5,0.5,16,52,65,258,0.08,0.38,4.2,0,India,IFCT 2017,Fermented steamed cake; light and easily digestible
+IN141,Dosa Plain,Oryza sativa / Vigna mungo,"Dosai (Ta); Dose (Ka)",Cooked Dishes,Cooked-Recipe,100,48,173,724,5.2,2.8,0.42,0.9,0.98,38.5,1.2,1,0.9,0,0,0.05,0.04,0.6,0.06,12,0,0,0.08,0.5,20,0.7,0.8,18,72,80,215,0.1,0.42,5.5,0,India,IFCT 2017,Fermented rice-lentil crepe pan-fried
+IN142,Sambar Lentil Vegetable Stew,Cajanus cajan / Lens culinaris,"Sambar (Ta); Sambhar (Hi)",Cooked Dishes,Cooked-Recipe,100,83.8,55,230,3.2,1.5,0.28,0.42,0.32,8.5,2.2,2.8,1.5,35,12.5,0.07,0.05,0.8,0.1,18,0,0,0.38,5.8,42,1.2,0.5,25,52,185,328,0.1,0.28,2.5,0,India,IFCT 2017,Toor dal vegetable stew eaten with idli/dosa/rice
+IN143,Chapati / Roti Whole Wheat,Triticum aestivum,"Chapati (Hi); Chappathi (Ta)",Cooked Dishes,Cooked-Recipe,100,33,259,1084,8.2,4,0.62,1.66,1.34,49,4,1.5,1.5,3,0,0.2,0.1,2.1,0.15,24,0,0,0.38,1,35,2.2,1.4,68,168,206,268,0.23,1.52,32.5,0,India,IFCT 2017,Whole wheat flatbread; high fiber versus maida roti
+IN144,Rajma Red Kidney Bean Curry,Phaseolus vulgaris,"Rajma (Hi/Pu)",Cooked Dishes,Cooked-Recipe,100,67,152,636,9.8,3.8,0.65,1.28,0.95,21.5,6.5,2,2.5,5,3,0.12,0.08,0.9,0.15,52,0,0,0.25,2.5,58,2.8,1.5,52,145,415,298,0.22,0.65,3.2,0,India,IFCT 2017,North Indian red kidney bean curry; very high folate
+IN145,Dal Makhani,Vigna mungo / Phaseolus vulgaris,"Dal makhani (Hi/Pu)",Cooked Dishes,Cooked-Recipe,100,68.8,145,607,6.8,7.2,4.12,1.98,0.58,15.8,4.5,1.8,1.5,52,1.5,0.08,0.12,0.8,0.12,35,0.2,0.1,0.25,2.5,88,2.8,1.2,55,118,295,348,0.18,0.55,3.5,12,India,IFCT 2017,Slow-cooked black urad dal with butter and cream
+IN146,Biryani Chicken,Gallus domesticus / Oryza sativa,"Biryani (Hi/Ta/various)",Cooked Dishes,Cooked-Recipe,100,55.8,198,829,12.5,8.2,2.48,3.5,1.52,22.5,0.8,1.5,1.2,38,2.5,0.08,0.12,3.5,0.25,12,0.2,0.2,0.45,3.5,28,1.2,1.5,22,128,215,385,0.08,0.35,15.2,42,India,IFCT 2017,Spiced rice with chicken; composite dish
+IN191,Khichdi Rice-Lentil,Oryza sativa / Lens culinaris,"Khichdi (Hi); Pongal (Ta)",Cooked Dishes,Cooked-Recipe,100,72.5,112,469,4.8,2,0.65,0.8,0.38,19.8,1.5,0.8,0.8,5,1.5,0.08,0.05,0.8,0.08,18,0,0,0.15,0.5,18,1,0.6,18,72,145,265,0.1,0.32,3.5,0,India,IFCT 2017,Classic rice-lentil porridge; easily digestible
+IN200,Rasam Tamarind Pepper Soup,Various,"Rasam (Ta); Chaaru (Te)",Cooked Dishes,Cooked-Recipe,100,93.5,20,84,0.8,0.5,0.1,0.2,0.12,3.5,0.5,1.5,1.5,5,5,0.02,0.02,0.3,0.04,5,0,0,0.12,0.5,15,0.5,0.2,8,18,120,328,0.06,0.12,0.5,0,India,IFCT 2017,Thin tamarind-pepper soup; digestive properties
+IN201,Curd Rice,Oryza sativa / Bos taurus,"Thayir sadam (Ta); Dahi chawal (Hi)",Cooked Dishes,Cooked-Recipe,100,68.5,118,494,4.2,2.8,1.65,0.8,0.1,20.2,0.3,2.5,0.7,15,0.5,0.03,0.15,0.2,0.05,5,0.4,0.05,0.06,0.3,78,0.2,0.5,10,72,108,245,0.03,0.25,2.5,5,India,IFCT 2017,Yogurt mixed with rice; cooling dish; South Indian staple
+IN210,Pav Bhaji,Various,"Pav bhaji (Ma/Hi)",Cooked Dishes,Cooked-Recipe,100,62.8,155,649,4.5,6.2,2.55,2.38,0.82,22.8,3.2,5.5,1.8,52,18.5,0.1,0.08,1.2,0.18,28,0,0,0.85,8.8,35,1.2,0.5,22,62,318,448,0.12,0.28,2.5,12,India,IFCT 2017,Spiced mixed vegetable mash with bread; Mumbai street food
+IN211,Chole Chickpea Curry,Cicer arietinum,"Chole (Hi/Pu); Kadala curry (Ma/Si)",Cooked Dishes,Cooked-Recipe,100,68.5,138,578,7.8,5.2,0.88,2.02,1.92,17.8,5.8,3.2,2.2,8,5.8,0.12,0.06,0.8,0.15,65,0,0,0.25,4.5,68,2.5,1.5,45,138,395,328,0.28,0.62,3.5,0,Both,IFCT 2017,Chickpea curry; also made in Sri Lanka as kadala curry
+SL150,Thambili King Coconut Water,Cocos nucifera var. aurantiaca,"Thambili (Si/Ta)",Beverages,Raw,100,94.8,22,92,0.5,0.1,0.08,0.01,0.01,4.5,0,4.5,0.4,0,2.4,0.04,0.06,0.1,0.06,0,0,0,0.04,0,25,0.1,0.2,11,20,258,65,0.08,0.14,0.2,0,Sri Lanka,SL FCT 2021,Sri Lanka king coconut water; high electrolytes
+SL151,Coconut Water Brown Coconut,Cocos nucifera,"Pol watura (Si)",Beverages,Raw,100,94.6,19,79,0.7,0.2,0.18,0.01,0.01,3.7,1.1,2.6,0.5,0,2.4,0.03,0.06,0.1,0.08,0,0,0,0.1,0,24,0.3,0.2,25,20,250,105,0.08,0.14,1,0,Sri Lanka,SL FCT 2021,Water from mature brown coconut
+IN150,Masala Chai with Milk,Camellia sinensis,"Masala chai (Hi)",Beverages,Cooked-Recipe,100,89.5,42,176,1.6,1.5,0.89,0.41,0.05,5.8,0,4.8,0.3,18,0.5,0.02,0.09,0.1,0.02,3,0.1,0.05,0.04,0.1,48,0,0.2,5,38,80,22,0,0,0.8,4,India,IFCT 2017,Spiced milk tea; values for prepared beverage with whole milk
+SL160,Jaggery Kithul Palm,Caryota urens,"Kithul hakuru (Si); Panai vellam (Ta)",Sugars,Raw,100,8,380,1590,0.4,0.1,0.03,0.02,0.01,91.5,0,85,0.5,0,0,0.01,0.03,0.2,0.01,0,0,0,0.04,0,120,10.5,0.3,52,40,985,58,0.22,0.18,1.8,0,Sri Lanka,SL FCT 2021,Kithul jaggery; much higher iron than cane sugar
+SL161,Jaggery Coconut Palm,Cocos nucifera,"Pol hakuru (Si); Karupatti (Ta)",Sugars,Raw,100,6,383,1602,0.2,0,0.01,0,0,93,0,88,0.8,0,0,0.01,0.03,0.1,0.01,0,0,0,0.02,0,95,2.8,0.2,28,30,280,45,0.15,0.12,1.2,0,Sri Lanka,SL FCT 2021,Coconut palm jaggery; used in traditional Sri Lankan sweets
+IN160,Sugarcane Jaggery Gur,Saccharum officinarum,"Gur (Hi); Vellam (Ta)",Sugars,Raw,100,5,383,1602,0.2,0.1,0.03,0.02,0.02,93.8,0,88,1.2,0,0,0.01,0.06,0.3,0.01,0,0,0,0.04,0,80,11.4,0.3,70,40,1050,28,0.14,0.16,1.5,0,India,IFCT 2017,Sugarcane jaggery; remarkably high iron versus refined sugar
+SL180,Pol Aluwa Coconut Candy,Cocos nucifera,"Pol aluwa (Si)",Sweets,Cooked-Recipe,100,6.2,432,1808,2.8,18.5,16.4,0.78,0.22,72.8,3.5,65,0.8,2,0.5,0.04,0.04,0.4,0.03,10,0,0,0.12,0.2,18,1.5,0.6,18,62,185,28,0.12,0.58,3.2,0,Sri Lanka,SL FCT 2021,Traditional Sri Lankan coconut candy with jaggery and rice flour
+SL181,Kavum Oil Cake,Oryza sativa / Cocos nucifera,"Kavum (Si)",Sweets,Cooked-Recipe,100,15.8,398,1665,4.5,18.5,15.68,1.55,0.48,62.8,0.8,22,1,2,0.5,0.05,0.05,0.5,0.04,8,0,0,0.1,0.2,12,0.8,0.4,15,48,128,18,0.08,0.42,2.8,0,Sri Lanka,SL FCT 2021,Deep-fried rice-flour and treacle cake; traditional Sri Lankan New Year sweet
+IN190,Besan Ladoo,Cicer arietinum,"Besan ladoo (Hi); Kadalai maav laddu (Ta)",Sweets,Cooked-Recipe,100,5.8,468,1959,10.5,22.5,10.28,8.05,2.72,60.8,3.2,42,1.5,82,0,0.2,0.12,0.8,0.12,42,0.1,0.05,0.45,0.5,55,2.8,1.5,55,182,285,22,0.48,0.88,5.5,28,India,IFCT 2017,Chickpea flour sweet balls with ghee and sugar`;
+
+// ============================================================
+// STATE
+// ============================================================
+let allFoods = [];
+let filteredFoods = [];
+let currentPage = 1;
+const PAGE_SIZE = 30;
+let sortCol = 'Food_Name_English';
+let sortAsc = true;
+let activeView = 'table';
+let activeNutrient = 'energy';
+let imagesEnabled = false;
+let foodImages = {}; // storage for user-added images
+
+const COLUMNS = [
+  { key: 'Food_Name_English', label: 'Food', always: true },
+  { key: 'Food_Group', label: 'Group', visible: true },
+  { key: 'Form', label: 'Form', visible: false },
+  { key: 'Energy_kcal', label: 'Energy (kcal)', visible: true, numeric: true },
+  { key: 'Protein_g', label: 'Protein (g)', visible: true, numeric: true },
+  { key: 'Total_Fat_g', label: 'Fat (g)', visible: true, numeric: true },
+  { key: 'Carbohydrate_g', label: 'Carbs (g)', visible: true, numeric: true },
+  { key: 'Total_Dietary_Fiber_g', label: 'Fiber (g)', visible: true, numeric: true },
+  { key: 'Potassium_mg', label: 'K (mg)', visible: true, numeric: true },
+  { key: 'Calcium_mg', label: 'Ca (mg)', visible: false, numeric: true },
+  { key: 'Iron_mg', label: 'Iron (mg)', visible: false, numeric: true },
+  { key: 'Vitamin_C_mg', label: 'Vit C (mg)', visible: false, numeric: true },
+  { key: 'Sodium_mg', label: 'Na (mg)', visible: false, numeric: true },
+  { key: 'Cholesterol_mg', label: 'Chol (mg)', visible: false, numeric: true },
+  { key: 'Source_Country', label: 'Country', visible: true },
+];
+
+const NUTRIENT_HIGHLIGHT_MAP = {
+  energy: 'Energy_kcal', protein: 'Protein_g', fat: 'Total_Fat_g',
+  carbs: 'Carbohydrate_g', fiber: 'Total_Dietary_Fiber_g',
+  potassium: 'Potassium_mg', calcium: 'Calcium_mg', iron: 'Iron_mg',
+  vitC: 'Vitamin_C_mg', vitA: 'Vitamin_A_RAE_ug'
+};
+
+const GROUP_CLASS_MAP = {
+  'Cereals': 'g-cereals', 'Pulses': 'g-pulses',
+  'Green Leafy Vegetables': 'g-green', 'Other Vegetables': 'g-other-veg',
+  'Fruits': 'g-fruits', 'Spices': 'g-spices',
+  'Nuts & Oilseeds': 'g-nuts', 'Meat': 'g-meat',
+  'Fish & Seafood': 'g-fish', 'Milk Products': 'g-milk',
+  'Eggs': 'g-eggs', 'Poultry': 'g-meat',
+  'Cooked Dishes': 'g-cooked', 'Roots & Tubers': 'g-roots',
+  'Sugars': 'g-sugars', 'Sweets': 'g-sweets',
+  'Beverages': 'g-beverages', 'Fats & Oils': 'g-fats'
+};
+
+const GROUP_EMOJI = {
+  'Cereals': '🌾', 'Pulses': '🫘', 'Green Leafy Vegetables': '🥬',
+  'Other Vegetables': '🥦', 'Fruits': '🍎', 'Spices': '🌶️',
+  'Nuts & Oilseeds': '🥜', 'Meat': '🥩', 'Fish & Seafood': '🐟',
+  'Milk Products': '🥛', 'Eggs': '🥚', 'Poultry': '🍗',
+  'Cooked Dishes': '🍛', 'Roots & Tubers': '🥔', 'Sugars': '🍯',
+  'Sweets': '🍬', 'Beverages': '🥤', 'Fats & Oils': '🫙'
+};
+
+// ============================================================
+// PARSE & INIT
+// ============================================================
+function init() {
+  const result = Papa.parse(CSV_DATA, { header: true, skipEmptyLines: true, dynamicTyping: true });
+  allFoods = result.data;
+  filteredFoods = [...allFoods];
+
+  document.getElementById('totalFoods').textContent = allFoods.length;
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('tableWrap').style.display = 'block';
+
+  // Unique groups
+  const groups = [...new Set(allFoods.map(f => f.Food_Group))].sort();
+  document.getElementById('totalGroups').textContent = groups.length;
+  const gSel = document.getElementById('groupFilter');
+  groups.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = g;
+    gSel.appendChild(o);
+  });
+
+  buildColOptions();
+  buildTableHead();
+  applyFilters();
+  bindEvents();
+
+  // Load saved images
+  const saved = localStorage.getItem('nutribase_images');
+  if (saved) try { foodImages = JSON.parse(saved); } catch(e) {}
+}
+
+function buildColOptions() {
+  const container = document.getElementById('colOptions');
+  COLUMNS.filter(c => !c.always).forEach(col => {
+    const div = document.createElement('label');
+    div.className = 'col-option';
+    div.innerHTML = `<input type="checkbox" ${col.visible ? 'checked' : ''} data-key="${col.key}"> ${col.label}`;
+    div.querySelector('input').addEventListener('change', e => {
+      col.visible = e.target.checked;
+      buildTableHead();
+      renderTable();
+    });
+    container.appendChild(div);
+  });
+}
+
+function buildTableHead() {
+  const thead = document.getElementById('tableHead');
+  thead.innerHTML = '';
+  const tr = document.createElement('tr');
+  const visibleCols = COLUMNS.filter(c => c.always || c.visible);
+  visibleCols.forEach(col => {
+    const th = document.createElement('th');
+    th.textContent = col.label;
+    th.innerHTML += ` <span class="sort-arrow">▼</span>`;
+    if (sortCol === col.key) th.classList.add('sorted');
+    th.addEventListener('click', () => {
+      if (sortCol === col.key) sortAsc = !sortAsc;
+      else { sortCol = col.key; sortAsc = true; }
+      applyFilters();
+    });
+    tr.appendChild(th);
+  });
+  thead.appendChild(tr);
+}
+
+// ============================================================
+// FILTERS & SORT
+// ============================================================
+function applyFilters() {
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const group = document.getElementById('groupFilter').value;
+  const form = document.getElementById('formFilter').value;
+  const country = document.getElementById('countryFilter').value;
+
+  filteredFoods = allFoods.filter(f => {
+    const nameMatch = !search || 
+      (f.Food_Name_English || '').toLowerCase().includes(search) ||
+      (f.Local_Names || '').toLowerCase().includes(search) ||
+      (f.Scientific_Name || '').toLowerCase().includes(search) ||
+      (f.Notes || '').toLowerCase().includes(search) ||
+      (f.Food_ID || '').toLowerCase().includes(search);
+    const groupMatch = !group || f.Food_Group === group;
+    const formMatch = !form || f.Form === form;
+    const countryMatch = !country || f.Source_Country === country || (country === 'Both' && f.Source_Country === 'Both');
+    return nameMatch && groupMatch && formMatch && countryMatch;
+  });
+
+  // Sort
+  filteredFoods.sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  currentPage = 1;
+  renderAll();
+}
+
+function renderAll() {
+  document.getElementById('totalCount').textContent = filteredFoods.length;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const slice = filteredFoods.slice(start, start + PAGE_SIZE);
+  document.getElementById('shownCount').textContent = slice.length ? `${start + 1}–${start + slice.length}` : 0;
+
+  const noRes = document.getElementById('noResults');
+  noRes.style.display = filteredFoods.length === 0 ? 'block' : 'none';
+  document.getElementById('tableWrap').style.display = (filteredFoods.length === 0 || activeView !== 'table') ? 'none' : 'block';
+  document.getElementById('cardsGrid').style.display = (filteredFoods.length === 0 || activeView !== 'cards') ? 'none' : 'grid';
+
+  if (filteredFoods.length > 0) {
+    if (activeView === 'table') renderTable(slice);
+    else renderCards(slice);
+  }
+
+  renderPagination();
+}
+
+function getHighlightVal(food) {
+  const key = NUTRIENT_HIGHLIGHT_MAP[activeNutrient];
+  return parseFloat(food[key]) || 0;
+}
+
+function getMaxHighlight() {
+  return Math.max(...filteredFoods.map(f => getHighlightVal(f)));
+}
+
+// ============================================================
+// TABLE RENDER
+// ============================================================
+function renderTable(slice) {
+  if (!slice) {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    slice = filteredFoods.slice(start, start + PAGE_SIZE);
+  }
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  const visibleCols = COLUMNS.filter(c => c.always || c.visible);
+  const maxH = getMaxHighlight();
+
+  slice.forEach((food, i) => {
+    const tr = document.createElement('tr');
+    tr.style.animationDelay = `${i * 15}ms`;
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', () => openModal(food));
+
+    visibleCols.forEach(col => {
+      const td = document.createElement('td');
+      if (col.key === 'Food_Name_English') {
+        const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
+        const imgHtml = imagesEnabled && foodImages[food.Food_ID] 
+          ? `<img src="${foodImages[food.Food_ID]}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle;flex-shrink:0;" onerror="this.style.display='none'">` 
+          : '';
+        td.className = 'food-name-cell';
+        td.innerHTML = `<div style="display:flex;align-items:flex-start;gap:${imagesEnabled?8:0}px;">
+          ${imgHtml}
+          <div>
+            <div class="food-name">${food.Food_Name_English || ''}</div>
+            ${food.Local_Names ? `<div class="food-local">${food.Local_Names.substring(0, 50)}${food.Local_Names.length > 50 ? '…' : ''}</div>` : ''}
+          </div>
+        </div>`;
+      } else if (col.key === 'Food_Group') {
+        const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
+        const emoji = GROUP_EMOJI[food.Food_Group] || '🍽️';
+        td.innerHTML = `<span class="badge badge-group ${grpClass}">${emoji} ${food.Food_Group || ''}</span>`;
+      } else if (col.key === 'Form') {
+        td.innerHTML = `<span class="badge-form">${food.Form || ''}</span>`;
+      } else if (col.key === 'Source_Country') {
+        const flag = food.Source_Country === 'Sri Lanka' ? '🇱🇰' : food.Source_Country === 'India' ? '🇮🇳' : '🌐';
+        td.innerHTML = `<span class="country-flag">${flag}</span>`;
+      } else if (col.numeric) {
+        const val = food[col.key];
+        const hKey = NUTRIENT_HIGHLIGHT_MAP[activeNutrient];
+        const isHighlight = col.key === hKey;
+        const numVal = parseFloat(val);
+        const pct = isHighlight && maxH > 0 ? (numVal / maxH * 100) : 0;
+        td.style.textAlign = 'right';
+        if (val === null || val === undefined || val === '') {
+          td.innerHTML = `<span class="num-na">–</span>`;
+        } else {
+          td.innerHTML = `<span class="num ${isHighlight ? 'num-highlight' : ''}">${numVal % 1 === 0 ? numVal : numVal.toFixed(1)}</span>
+            ${isHighlight ? `<div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%;background:var(--accent);"></div></div>` : ''}`;
+        }
+      } else {
+        td.textContent = food[col.key] || '';
+      }
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+// ============================================================
+// CARDS RENDER
+// ============================================================
+function renderCards(slice) {
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = '';
+  const maxH = getMaxHighlight();
+
+  slice.forEach((food, i) => {
+    const card = document.createElement('div');
+    card.className = 'food-card';
+    card.style.animationDelay = `${i * 20}ms`;
+    card.addEventListener('click', () => openModal(food));
+
+    const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
+    const emoji = GROUP_EMOJI[food.Food_Group] || '🍽️';
+    const flag = food.Source_Country === 'Sri Lanka' ? '🇱🇰' : food.Source_Country === 'India' ? '🇮🇳' : '🌐';
+    const imgSrc = foodImages[food.Food_ID];
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div>
+          <div class="card-name">${food.Food_Name_English || ''}</div>
+          ${food.Scientific_Name ? `<div class="card-sci">${food.Scientific_Name}</div>` : ''}
+          ${food.Local_Names ? `<div class="card-local">${food.Local_Names.substring(0,60)}${food.Local_Names.length>60?'…':''}</div>` : ''}
+        </div>
+        <div class="card-img">
+          ${imagesEnabled && imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;border-radius:8px;object-fit:cover;" onerror="this.parentElement.textContent='${emoji}'">` : emoji}
+        </div>
+      </div>
+      <div class="card-pills">
+        <span class="badge badge-group ${grpClass}">${emoji} ${food.Food_Group||''}</span>
+        <span class="badge-form">${food.Form||''}</span>
+        <span style="margin-left:auto;">${flag}</span>
+      </div>
+      <div class="card-macros">
+        <div class="macro-item"><div class="macro-value">${food.Energy_kcal||'–'}</div><div class="macro-label">kcal</div></div>
+        <div class="macro-item"><div class="macro-value">${food.Protein_g||'–'}</div><div class="macro-label">protein</div></div>
+        <div class="macro-item"><div class="macro-value">${food.Total_Fat_g||'–'}</div><div class="macro-label">fat</div></div>
+        <div class="macro-item"><div class="macro-value">${food.Carbohydrate_g||'–'}</div><div class="macro-label">carbs</div></div>
+      </div>
+      <div class="card-micros">
+        <div class="micro-item"><span class="micro-name">Fiber</span><span class="micro-val">${food.Total_Dietary_Fiber_g||'–'}g</span></div>
+        <div class="micro-item"><span class="micro-name">Potassium</span><span class="micro-val">${food.Potassium_mg||'–'}mg</span></div>
+        <div class="micro-item"><span class="micro-name">Calcium</span><span class="micro-val">${food.Calcium_mg||'–'}mg</span></div>
+        <div class="micro-item"><span class="micro-name">Iron</span><span class="micro-val">${food.Iron_mg||'–'}mg</span></div>
+        <div class="micro-item"><span class="micro-name">Vit C</span><span class="micro-val">${food.Vitamin_C_mg||'–'}mg</span></div>
+        <div class="micro-item"><span class="micro-name">Sodium</span><span class="micro-val">${food.Sodium_mg||'–'}mg</span></div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ============================================================
+// PAGINATION
+// ============================================================
+function renderPagination() {
+  const totalPages = Math.ceil(filteredFoods.length / PAGE_SIZE);
+  const pg = document.getElementById('pagination');
+  pg.innerHTML = '';
+  if (totalPages <= 1) return;
+
+  const addBtn = (label, page, disabled = false) => {
+    const btn = document.createElement('button');
+    btn.className = `page-btn${page === currentPage ? ' active' : ''}`;
+    btn.textContent = label;
+    if (disabled) btn.disabled = true;
+    btn.addEventListener('click', () => { currentPage = page; renderAll(); window.scrollTo(0, 0); });
+    pg.appendChild(btn);
+  };
+
+  addBtn('‹ Prev', currentPage - 1, currentPage === 1);
+  const start = Math.max(1, currentPage - 2);
+  const end = Math.min(totalPages, start + 4);
+  for (let p = start; p <= end; p++) addBtn(p, p);
+  addBtn('Next ›', currentPage + 1, currentPage === totalPages);
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(food) {
+  const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
+  const emoji = GROUP_EMOJI[food.Food_Group] || '🍽️';
+  const flag = food.Source_Country === 'Sri Lanka' ? '🇱🇰 Sri Lanka' : food.Source_Country === 'India' ? '🇮🇳 India' : '🌐 Both';
+  document.getElementById('modalTitle').textContent = food.Food_Name_English || '';
+  document.getElementById('modalSubtitle').innerHTML = `
+    <span class="badge badge-group ${grpClass}">${emoji} ${food.Food_Group||''}</span>
+    &nbsp;<span style="font-style:italic;color:var(--text2)">${food.Scientific_Name||''}</span>
+    &nbsp;·&nbsp;${flag}`;
+
+  const imgSrc = foodImages[food.Food_ID] || '';
+
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    ${imagesEnabled ? `
+    <div class="modal-img-section">
+      <img class="modal-food-img" id="modalFoodImg" src="${imgSrc}" style="${imgSrc ? 'display:block' : 'display:none'}" onerror="this.style.display='none';document.getElementById('modalImgPlaceholder').style.display='block'">
+      <div class="modal-img-placeholder" id="modalImgPlaceholder" style="${imgSrc ? 'display:none' : ''}">${emoji}</div>
+      <div class="modal-img-note">Add an image URL for this food item</div>
+      <input class="modal-img-url-input" type="url" id="imgUrlInput" placeholder="https://example.com/food-image.jpg" value="${imgSrc}">
+      <div class="modal-img-actions">
+        <button class="btn-small btn-primary" onclick="saveImage('${food.Food_ID}')">Save Image</button>
+        ${imgSrc ? `<button class="btn-small btn-secondary" onclick="removeImage('${food.Food_ID}')">Remove</button>` : ''}
+      </div>
+    </div>` : ''}
+
+    ${food.Local_Names ? `<div style="margin-bottom:12px;font-size:12px;color:var(--text2)"><strong style="color:var(--text)">Local Names:</strong> ${food.Local_Names}</div>` : ''}
+
+    <div class="nutrient-section">
+      <div class="nutrient-section-title">Energy & Macronutrients</div>
+      <div class="nutrient-grid">
+        ${nutriItem('Energy', food.Energy_kcal, 'kcal')}
+        ${nutriItem('Energy', food.Energy_kJ, 'kJ')}
+        ${nutriItem('Protein', food.Protein_g, 'g')}
+        ${nutriItem('Total Fat', food.Total_Fat_g, 'g')}
+        ${nutriItem('Saturated Fat', food.Saturated_Fat_g, 'g')}
+        ${nutriItem('MUFA', food.MUFA_g, 'g')}
+        ${nutriItem('PUFA', food.PUFA_g, 'g')}
+        ${nutriItem('Carbohydrate', food.Carbohydrate_g, 'g')}
+        ${nutriItem('Dietary Fiber', food.Total_Dietary_Fiber_g, 'g')}
+        ${nutriItem('Sugars', food.Sugars_g, 'g')}
+        ${nutriItem('Moisture', food.Moisture_g, 'g')}
+        ${nutriItem('Cholesterol', food.Cholesterol_mg, 'mg')}
+      </div>
+    </div>
+
+    <div class="nutrient-section">
+      <div class="nutrient-section-title">Vitamins</div>
+      <div class="nutrient-grid">
+        ${nutriItem('Vitamin A (RAE)', food.Vitamin_A_RAE_ug, 'μg')}
+        ${nutriItem('Vitamin C', food.Vitamin_C_mg, 'mg')}
+        ${nutriItem('Thiamin B1', food.Thiamin_B1_mg, 'mg')}
+        ${nutriItem('Riboflavin B2', food.Riboflavin_B2_mg, 'mg')}
+        ${nutriItem('Niacin B3', food.Niacin_B3_mg, 'mg')}
+        ${nutriItem('Vitamin B6', food.Vitamin_B6_mg, 'mg')}
+        ${nutriItem('Folate', food.Folate_ug, 'μg')}
+        ${nutriItem('Vitamin B12', food.Vitamin_B12_ug, 'μg')}
+        ${nutriItem('Vitamin D', food.Vitamin_D_ug, 'μg')}
+        ${nutriItem('Vitamin E', food.Vitamin_E_mg, 'mg')}
+        ${nutriItem('Vitamin K', food.Vitamin_K_ug, 'μg')}
+      </div>
+    </div>
+
+    <div class="nutrient-section">
+      <div class="nutrient-section-title">Minerals</div>
+      <div class="nutrient-grid">
+        ${nutriItem('Calcium', food.Calcium_mg, 'mg')}
+        ${nutriItem('Iron', food.Iron_mg, 'mg')}
+        ${nutriItem('Zinc', food.Zinc_mg, 'mg')}
+        ${nutriItem('Magnesium', food.Magnesium_mg, 'mg')}
+        ${nutriItem('Phosphorus', food.Phosphorus_mg, 'mg')}
+        ${nutriItem('Potassium', food.Potassium_mg, 'mg')}
+        ${nutriItem('Sodium', food.Sodium_mg, 'mg')}
+        ${nutriItem('Copper', food.Copper_mg, 'mg')}
+        ${nutriItem('Manganese', food.Manganese_mg, 'mg')}
+        ${nutriItem('Selenium', food.Selenium_ug, 'μg')}
+      </div>
+    </div>
+
+    ${food.Notes ? `
+    <div class="nutrient-section">
+      <div class="nutrient-section-title">Notes</div>
+      <div class="notes-box">${food.Notes}</div>
+    </div>` : ''}
+
+    <div style="margin-top:12px;font-size:11px;color:var(--text3);">
+      Source: ${food.Reference || '–'} &nbsp;·&nbsp; Food ID: ${food.Food_ID || '–'}
+    </div>`;
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function nutriItem(name, val, unit) {
+  const v = val === null || val === undefined || val === '' ? '–' : val;
+  return `<div class="nutrient-item">
+    <div class="nutrient-item-name">${name}</div>
+    <div class="nutrient-item-val">${v}</div>
+    <div class="nutrient-item-unit">${unit}</div>
+  </div>`;
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function saveImage(foodId) {
+  const url = document.getElementById('imgUrlInput').value.trim();
+  if (url) {
+    foodImages[foodId] = url;
+    localStorage.setItem('nutribase_images', JSON.stringify(foodImages));
+    const img = document.getElementById('modalFoodImg');
+    const placeholder = document.getElementById('modalImgPlaceholder');
+    if (img) { img.src = url; img.style.display = 'block'; }
+    if (placeholder) placeholder.style.display = 'none';
+    renderAll();
+  }
+}
+
+function removeImage(foodId) {
+  delete foodImages[foodId];
+  localStorage.setItem('nutribase_images', JSON.stringify(foodImages));
+  renderAll();
+  closeModalDirect();
+}
+
+// ============================================================
+// VIEW TOGGLE
+// ============================================================
+function setView(v) {
+  activeView = v;
+  document.getElementById('viewTable').classList.toggle('active', v === 'table');
+  document.getElementById('viewCards').classList.toggle('active', v === 'cards');
+  document.getElementById('tableWrap').style.display = (v === 'table' && filteredFoods.length > 0) ? 'block' : 'none';
+  document.getElementById('cardsGrid').style.display = (v === 'cards' && filteredFoods.length > 0) ? 'grid' : 'none';
+  renderAll();
+}
+
+function toggleImageFeature() {
+  imagesEnabled = !imagesEnabled;
+  const btn = document.getElementById('imgToggle');
+  btn.textContent = imagesEnabled ? 'Disable Images' : 'Enable Images';
+  btn.classList.toggle('enabled', imagesEnabled);
+  renderAll();
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+function bindEvents() {
+  document.getElementById('searchInput').addEventListener('input', () => applyFilters());
+  document.getElementById('groupFilter').addEventListener('change', () => applyFilters());
+  document.getElementById('formFilter').addEventListener('change', () => applyFilters());
+  document.getElementById('countryFilter').addEventListener('change', () => applyFilters());
+
+  document.querySelectorAll('.nut-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nut-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeNutrient = btn.dataset.nutrient;
+      renderAll();
+    });
+  });
+
+  // Col toggle dropdown
+  document.getElementById('colToggleBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('colDropdown').classList.toggle('open');
+  });
+  document.addEventListener('click', e => {
+    if (!document.getElementById('colToggle').contains(e.target))
+      document.getElementById('colDropdown').classList.remove('open');
+  });
+
+  // Keyboard escape to close modal
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModalDirect();
+  });
+}
+
+// ============================================================
+// START
+// ============================================================
+init();
+</script>
+</body>
+</html>
