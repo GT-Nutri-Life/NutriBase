@@ -23,7 +23,7 @@ https://gt-nutri-life.github.io/FoodCompositionTable/
 ## Project structure
 
 - `index.html` — single-page application with data, styling, and logic.
-- `assets/og-image.svg` — social sharing image for SEO metadata.
+- `assets/og-image.png` — social sharing image for SEO metadata.
 
 ## Getting started
 
