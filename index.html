@@ -1445,7 +1445,7 @@ function sanitizeImageUrl(value) {
   if (!value) return '';
   try {
     const url = new URL(value, window.location.href);
-    if (url.protocol === 'http:' || url.protocol === 'https:') return url.href;
+    if (url.protocol === 'https:') return url.href;
   } catch (e) {
     return '';
   }
@@ -1455,7 +1455,7 @@ function sanitizeImageUrl(value) {
 function bindImageError(img, handler) {
   if (!img) return;
   img.addEventListener('error', handler);
-  if (img.complete && img.naturalWidth === 0) handler();
+  if (img.complete && img.naturalWidth === 0) handler(new Event('error'));
 }
 
 // ============================================================
@@ -1730,7 +1730,6 @@ function openModal(food) {
     </div>`;
   const modalImg = document.getElementById('modalFoodImg');
   bindImageError(modalImg, () => {
-    if (!modalImg) return;
     modalImg.style.display = 'none';
     const placeholder = document.getElementById('modalImgPlaceholder');
     if (placeholder) placeholder.style.display = 'block';
