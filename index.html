@@ -1423,13 +1423,19 @@ function getMaxHighlight() {
   return Math.max(...filteredFoods.map(f => getHighlightVal(f)));
 }
 
-function escapeAttribute(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/'/g, '&#39;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+function buildImageHtml({ src, alt, className, id, style, width, height, loading, decoding, onerror }) {
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = alt;
+  if (className) img.className = className;
+  if (id) img.id = id;
+  if (style) img.style.cssText = style;
+  if (width) img.width = width;
+  if (height) img.height = height;
+  if (loading) img.loading = loading;
+  if (decoding) img.decoding = decoding;
+  if (onerror) img.setAttribute('onerror', onerror);
+  return img.outerHTML;
 }
 
 // ============================================================
@@ -1455,9 +1461,18 @@ function renderTable(slice) {
       const td = document.createElement('td');
       if (col.key === 'Food_Name_English') {
         const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
-        const imgAlt = food.Food_Name_English ? `Image of ${escapeAttribute(food.Food_Name_English)}` : 'Food image';
+        const imgAlt = food.Food_Name_English ? `Image of ${food.Food_Name_English}` : 'Food image';
         const imgHtml = imagesEnabled && foodImages[food.Food_ID] 
-          ? `<img src="${foodImages[food.Food_ID]}" alt="${imgAlt}" loading="lazy" decoding="async" width="32" height="32" style="width:32px;height:32px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle;flex-shrink:0;" onerror="this.style.display='none'">` 
+          ? buildImageHtml({
+              src: foodImages[food.Food_ID],
+              alt: imgAlt,
+              width: 32,
+              height: 32,
+              loading: 'lazy',
+              decoding: 'async',
+              style: 'width:32px;height:32px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle;flex-shrink:0;',
+              onerror: "this.style.display='none'"
+            })
           : '';
         td.className = 'food-name-cell';
         td.innerHTML = `<div style="display:flex;align-items:flex-start;gap:${imagesEnabled?8:0}px;">
@@ -1517,7 +1532,7 @@ function renderCards(slice) {
     const emoji = GROUP_EMOJI[food.Food_Group] || '🍽️';
     const flag = food.Source_Country === 'Sri Lanka' ? '🇱🇰' : food.Source_Country === 'India' ? '🇮🇳' : '🌐';
     const imgSrc = foodImages[food.Food_ID];
-    const imgAlt = food.Food_Name_English ? `Image of ${escapeAttribute(food.Food_Name_English)}` : 'Food image';
+    const imgAlt = food.Food_Name_English ? `Image of ${food.Food_Name_English}` : 'Food image';
 
     card.innerHTML = `
       <div class="card-header">
@@ -1527,7 +1542,14 @@ function renderCards(slice) {
           ${food.Local_Names ? `<div class="card-local">${food.Local_Names.substring(0,60)}${food.Local_Names.length>60?'…':''}</div>` : ''}
         </div>
         <div class="card-img">
-          ${imagesEnabled && imgSrc ? `<img src="${imgSrc}" alt="${imgAlt}" loading="lazy" decoding="async" style="width:100%;height:100%;border-radius:8px;object-fit:cover;" onerror="this.parentElement.textContent='${emoji}'">` : emoji}
+          ${imagesEnabled && imgSrc ? buildImageHtml({
+              src: imgSrc,
+              alt: imgAlt,
+              loading: 'lazy',
+              decoding: 'async',
+              style: 'width:100%;height:100%;border-radius:8px;object-fit:cover;',
+              onerror: `this.parentElement.textContent='${emoji}'`
+            }) : emoji}
         </div>
       </div>
       <div class="card-pills">
@@ -1592,13 +1614,20 @@ function openModal(food) {
     &nbsp;·&nbsp;${flag}`;
 
   const imgSrc = foodImages[food.Food_ID] || '';
-  const imgAlt = food.Food_Name_English ? `Image of ${escapeAttribute(food.Food_Name_English)}` : 'Food image';
+  const imgAlt = food.Food_Name_English ? `Image of ${food.Food_Name_English}` : 'Food image';
 
   const body = document.getElementById('modalBody');
   body.innerHTML = `
     ${imagesEnabled ? `
     <div class="modal-img-section">
-      <img class="modal-food-img" id="modalFoodImg" src="${imgSrc}" alt="${imgAlt}" style="${imgSrc ? 'display:block' : 'display:none'}" onerror="this.style.display='none';document.getElementById('modalImgPlaceholder').style.display='block'">
+      ${buildImageHtml({
+        src: imgSrc,
+        alt: imgAlt,
+        className: 'modal-food-img',
+        id: 'modalFoodImg',
+        style: imgSrc ? 'display:block' : 'display:none',
+        onerror: "this.style.display='none';document.getElementById('modalImgPlaceholder').style.display='block'"
+      })}
       <div class="modal-img-placeholder" id="modalImgPlaceholder" style="${imgSrc ? 'display:none' : ''}">${emoji}</div>
       <div class="modal-img-note">Add an image URL for this food item</div>
       <input class="modal-img-url-input" type="url" id="imgUrlInput" placeholder="https://example.com/food-image.jpg" value="${imgSrc}">
