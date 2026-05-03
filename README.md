@@ -39,8 +39,8 @@ This repository uses GitHub Pages via `.github/workflows/static.yml`. Pushes to 
 
 ## Contributing
 
-Suggestions and improvements are welcome. Please open an issue or submit a pull request with clear context and screenshots if UI changes are involved.
+Suggestions and improvements are welcome. Please open an issue or submit a pull request with clear context and screenshots if UI changes are involved. Note that the project does not yet specify a public reuse license.
 
 ## License
 
-No license file is currently provided. All rights reserved until a license is added. Add a `LICENSE` file if you intend to define reuse terms.
+No license file is currently provided. Reuse rights are not granted unless explicitly agreed to by the maintainers. Add a `LICENSE` file if you intend to define reuse terms.

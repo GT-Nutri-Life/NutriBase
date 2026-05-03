@@ -1438,7 +1438,24 @@ function buildImageHtml({ src, alt, className, id, style, width, height, loading
 }
 
 function getImageAltText(food) {
-  return food.Food_Name_English ? `Image of ${food.Food_Name_English}` : 'Food image';
+  return food.Food_Name_English || 'Food';
+}
+
+function sanitizeImageUrl(value) {
+  if (!value) return '';
+  try {
+    const url = new URL(value, window.location.href);
+    if (url.protocol === 'http:' || url.protocol === 'https:') return url.href;
+  } catch (e) {
+    return '';
+  }
+  return '';
+}
+
+function bindImageError(img, handler) {
+  if (!img) return;
+  img.addEventListener('error', handler);
+  if (img.complete && img.naturalWidth === 0) handler();
 }
 
 // ============================================================
@@ -1465,9 +1482,10 @@ function renderTable(slice) {
       if (col.key === 'Food_Name_English') {
         const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
         const imgAlt = getImageAltText(food);
-        const imgHtml = imagesEnabled && foodImages[food.Food_ID] 
+        const imgSrc = sanitizeImageUrl(foodImages[food.Food_ID]);
+        const imgHtml = imagesEnabled && imgSrc
           ? buildImageHtml({
-              src: foodImages[food.Food_ID],
+              src: imgSrc,
               alt: imgAlt,
               width: 32,
               height: 32,
@@ -1484,9 +1502,9 @@ function renderTable(slice) {
             ${food.Local_Names ? `<div class="food-local">${food.Local_Names.substring(0, 50)}${food.Local_Names.length > 50 ? '…' : ''}</div>` : ''}
           </div>
         </div>`;
-        if (imagesEnabled && foodImages[food.Food_ID]) {
+        if (imagesEnabled && imgSrc) {
           const img = td.querySelector('img');
-          if (img) img.addEventListener('error', () => { img.style.display = 'none'; });
+          bindImageError(img, () => { img.style.display = 'none'; });
         }
       } else if (col.key === 'Food_Group') {
         const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
@@ -1537,7 +1555,7 @@ function renderCards(slice) {
     const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
     const emoji = GROUP_EMOJI[food.Food_Group] || '🍽️';
     const flag = food.Source_Country === 'Sri Lanka' ? '🇱🇰' : food.Source_Country === 'India' ? '🇮🇳' : '🌐';
-    const imgSrc = foodImages[food.Food_ID];
+    const imgSrc = sanitizeImageUrl(foodImages[food.Food_ID]);
     const imgAlt = getImageAltText(food);
 
     card.innerHTML = `
@@ -1578,12 +1596,10 @@ function renderCards(slice) {
       </div>`;
     if (imagesEnabled && imgSrc) {
       const img = card.querySelector('img');
-      if (img) {
-        img.addEventListener('error', () => {
-          const imgWrap = card.querySelector('.card-img');
-          if (imgWrap) imgWrap.textContent = emoji;
-        });
-      }
+      bindImageError(img, () => {
+        const imgWrap = card.querySelector('.card-img');
+        if (imgWrap) imgWrap.textContent = emoji;
+      });
     }
     grid.appendChild(card);
   });
@@ -1627,7 +1643,7 @@ function openModal(food) {
     &nbsp;<span style="font-style:italic;color:var(--text2)">${food.Scientific_Name||''}</span>
     &nbsp;·&nbsp;${flag}`;
 
-  const imgSrc = foodImages[food.Food_ID] || '';
+  const imgSrc = sanitizeImageUrl(foodImages[food.Food_ID]);
   const imgAlt = getImageAltText(food);
 
   const body = document.getElementById('modalBody');
@@ -1713,13 +1729,12 @@ function openModal(food) {
       Source: ${food.Reference || '–'} &nbsp;·&nbsp; Food ID: ${food.Food_ID || '–'}
     </div>`;
   const modalImg = document.getElementById('modalFoodImg');
-  if (modalImg) {
-    modalImg.addEventListener('error', () => {
-      modalImg.style.display = 'none';
-      const placeholder = document.getElementById('modalImgPlaceholder');
-      if (placeholder) placeholder.style.display = 'block';
-    });
-  }
+  bindImageError(modalImg, () => {
+    if (!modalImg) return;
+    modalImg.style.display = 'none';
+    const placeholder = document.getElementById('modalImgPlaceholder');
+    if (placeholder) placeholder.style.display = 'block';
+  });
 
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1743,7 +1758,8 @@ function closeModalDirect() {
 }
 
 function saveImage(foodId) {
-  const url = document.getElementById('imgUrlInput').value.trim();
+  const input = document.getElementById('imgUrlInput').value.trim();
+  const url = sanitizeImageUrl(input);
   if (url) {
     foodImages[foodId] = url;
     localStorage.setItem('nutribase_images', JSON.stringify(foodImages));
