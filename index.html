@@ -1423,7 +1423,7 @@ function getMaxHighlight() {
   return Math.max(...filteredFoods.map(f => getHighlightVal(f)));
 }
 
-function buildImageHtml({ src, alt, className, id, style, width, height, loading, decoding, onerror }) {
+function buildImageHtml({ src, alt, className, id, style, width, height, loading, decoding }) {
   const img = document.createElement('img');
   img.src = src;
   img.alt = alt;
@@ -1434,7 +1434,6 @@ function buildImageHtml({ src, alt, className, id, style, width, height, loading
   if (height) img.height = height;
   if (loading) img.loading = loading;
   if (decoding) img.decoding = decoding;
-  if (onerror) img.setAttribute('onerror', onerror);
   return img.outerHTML;
 }
 
@@ -1470,8 +1469,7 @@ function renderTable(slice) {
               height: 32,
               loading: 'lazy',
               decoding: 'async',
-              style: 'width:32px;height:32px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle;flex-shrink:0;',
-              onerror: "this.style.display='none'"
+              style: 'width:32px;height:32px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle;flex-shrink:0;'
             })
           : '';
         td.className = 'food-name-cell';
@@ -1482,6 +1480,10 @@ function renderTable(slice) {
             ${food.Local_Names ? `<div class="food-local">${food.Local_Names.substring(0, 50)}${food.Local_Names.length > 50 ? '…' : ''}</div>` : ''}
           </div>
         </div>`;
+        if (imagesEnabled && foodImages[food.Food_ID]) {
+          const img = td.querySelector('img');
+          if (img) img.addEventListener('error', () => { img.style.display = 'none'; });
+        }
       } else if (col.key === 'Food_Group') {
         const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
         const emoji = GROUP_EMOJI[food.Food_Group] || '🍽️';
@@ -1547,8 +1549,7 @@ function renderCards(slice) {
               alt: imgAlt,
               loading: 'lazy',
               decoding: 'async',
-              style: 'width:100%;height:100%;border-radius:8px;object-fit:cover;',
-              onerror: `this.parentElement.textContent='${emoji}'`
+              style: 'width:100%;height:100%;border-radius:8px;object-fit:cover;'
             }) : emoji}
         </div>
       </div>
@@ -1571,6 +1572,15 @@ function renderCards(slice) {
         <div class="micro-item"><span class="micro-name">Vit C</span><span class="micro-val">${food.Vitamin_C_mg||'–'}mg</span></div>
         <div class="micro-item"><span class="micro-name">Sodium</span><span class="micro-val">${food.Sodium_mg||'–'}mg</span></div>
       </div>`;
+    if (imagesEnabled && imgSrc) {
+      const img = card.querySelector('img');
+      if (img) {
+        img.addEventListener('error', () => {
+          const imgWrap = card.querySelector('.card-img');
+          if (imgWrap) imgWrap.textContent = emoji;
+        });
+      }
+    }
     grid.appendChild(card);
   });
 }
@@ -1625,8 +1635,7 @@ function openModal(food) {
         alt: imgAlt,
         className: 'modal-food-img',
         id: 'modalFoodImg',
-        style: imgSrc ? 'display:block' : 'display:none',
-        onerror: "this.style.display='none';document.getElementById('modalImgPlaceholder').style.display='block'"
+        style: imgSrc ? 'display:block' : 'display:none'
       })}
       <div class="modal-img-placeholder" id="modalImgPlaceholder" style="${imgSrc ? 'display:none' : ''}">${emoji}</div>
       <div class="modal-img-note">Add an image URL for this food item</div>
@@ -1699,6 +1708,14 @@ function openModal(food) {
     <div style="margin-top:12px;font-size:11px;color:var(--text3);">
       Source: ${food.Reference || '–'} &nbsp;·&nbsp; Food ID: ${food.Food_ID || '–'}
     </div>`;
+  const modalImg = document.getElementById('modalFoodImg');
+  if (modalImg) {
+    modalImg.addEventListener('error', () => {
+      modalImg.style.display = 'none';
+      const placeholder = document.getElementById('modalImgPlaceholder');
+      if (placeholder) placeholder.style.display = 'block';
+    });
+  }
 
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';

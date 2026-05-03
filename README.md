@@ -43,4 +43,4 @@ Suggestions and improvements are welcome. Please open an issue or submit a pull 
 
 ## License
 
-No license file is currently provided. Add a `LICENSE` file if you intend to define reuse terms.
+No license file is currently provided. All rights reserved until a license is added. Add a `LICENSE` file if you intend to define reuse terms.
