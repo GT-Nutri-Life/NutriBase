@@ -1041,10 +1041,12 @@ async function init() {
     return;
   }
   const result = Papa.parse(csvText, { header: true, skipEmptyLines: true, dynamicTyping: true });
-  // Normalize column names: the CSV uses 碌 (U+788C) instead of the micro sign; map to 'u'
+  // The CSV column headers contain U+788C (碌) as a corrupted micro-sign (μg).
+  // Normalise to 'u' so column keys match the rest of the JavaScript (e.g. Vitamin_A_RAE_ug).
+  const CORRUPT_MICRO = /\u788c/g;
   allFoods = result.data.map(row => {
     const out = {};
-    for (const [k, v] of Object.entries(row)) out[k.replace(/碌/g, 'u')] = v;
+    for (const [k, v] of Object.entries(row)) out[k.replace(CORRUPT_MICRO, 'u')] = v;
     return out;
   });
   filteredFoods = [...allFoods];
