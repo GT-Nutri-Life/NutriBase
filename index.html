@@ -3,10 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Explore NutriBase, a free food composition table for Sri Lanka and India with calories, macros, vitamins, and minerals per 100g edible portion.">
+<meta name="keywords" content="food composition table, Sri Lanka nutrition, India nutrition, nutrient database, calories, macronutrients, micronutrients, vitamins, minerals, dietetics, food data">
+<meta name="author" content="GT Nutri-Life">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0d1117">
+<meta name="color-scheme" content="dark">
 <title>NutriBase — Sri Lanka & India Food Composition Table</title>
+<link rel="canonical" href="https://gt-nutri-life.github.io/FoodCompositionTable/">
+<meta property="og:title" content="NutriBase — Sri Lanka & India Food Composition Table">
+<meta property="og:description" content="Explore a free food composition table with energy, macro, and micronutrient data per 100g for Sri Lanka and India.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gt-nutri-life.github.io/FoodCompositionTable/">
+<meta property="og:site_name" content="NutriBase">
+<meta property="og:image" content="https://gt-nutri-life.github.io/FoodCompositionTable/assets/og-image.png">
+<meta property="og:image:alt" content="NutriBase food composition table for Sri Lanka and India">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="NutriBase — Sri Lanka & India Food Composition Table">
+<meta name="twitter:description" content="Explore a free food composition table with energy, macro, and micronutrient data per 100g for Sri Lanka and India.">
+<meta name="twitter:image" content="https://gt-nutri-life.github.io/FoodCompositionTable/assets/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://gt-nutri-life.github.io/FoodCompositionTable/#website",
+      "name": "NutriBase",
+      "url": "https://gt-nutri-life.github.io/FoodCompositionTable/",
+      "inLanguage": "en"
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://gt-nutri-life.github.io/FoodCompositionTable/#webpage",
+      "name": "NutriBase — Sri Lanka & India Food Composition Table",
+      "description": "Explore a free food composition table with energy, macro, and micronutrient data per 100g for Sri Lanka and India.",
+      "url": "https://gt-nutri-life.github.io/FoodCompositionTable/",
+      "isPartOf": { "@id": "https://gt-nutri-life.github.io/FoodCompositionTable/#website" },
+      "inLanguage": "en"
+    },
+    {
+      "@type": "Dataset",
+      "@id": "https://gt-nutri-life.github.io/FoodCompositionTable/#dataset",
+      "name": "NutriBase Food Composition Table",
+      "description": "Food composition data for Sri Lanka and India with calories, macros, vitamins, and minerals per 100g edible portion.",
+      "url": "https://gt-nutri-life.github.io/FoodCompositionTable/",
+      "keywords": ["food composition", "nutrition", "Sri Lanka", "India", "nutrient data"],
+      "creator": {
+        "@type": "Organization",
+        "name": "GT Nutri-Life"
+      },
+      "inLanguage": "en",
+      "isAccessibleForFree": true
+    }
+  ]
+}
+</script>
 <style>
   :root {
     --bg: #0d1117;
@@ -48,6 +105,57 @@
     font-size: 14px;
     min-height: 100vh;
     overflow-x: hidden;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .skip-link:focus {
+    left: 16px;
+    top: 16px;
+    width: auto;
+    height: auto;
+    padding: 8px 12px;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 6px;
+    z-index: 200;
+    font-weight: 600;
+  }
+
+  .seo-intro {
+    max-width: 1400px;
+    margin: 24px auto 0;
+    padding: 16px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+
+  .seo-intro h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .seo-intro p {
+    color: var(--text2);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .seo-intro ul {
+    list-style: disc;
+    padding-left: 18px;
+    color: var(--text2);
+    display: grid;
+    gap: 6px;
   }
 
   /* Header */
@@ -842,6 +950,7 @@
 </style>
 </head>
 <body>
+<a class="skip-link" href="#mainContent">Skip to main content</a>
 
 <header>
   <div class="header-inner">
@@ -860,18 +969,18 @@
     <div class="controls">
       <div class="search-wrap">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="searchInput" placeholder="Search food name, local name, scientific name…">
+        <input type="text" id="searchInput" name="search" aria-label="Search foods" placeholder="Search food name, local name, scientific name…">
       </div>
-      <select id="groupFilter">
+      <select id="groupFilter" aria-label="Filter by food group">
         <option value="">All Groups</option>
       </select>
-      <select id="formFilter">
+      <select id="formFilter" aria-label="Filter by food form">
         <option value="">All Forms</option>
         <option value="Raw">Raw</option>
         <option value="Cooked-Boiled">Cooked – Boiled</option>
         <option value="Cooked-Recipe">Cooked – Recipe</option>
       </select>
-      <select id="countryFilter">
+      <select id="countryFilter" aria-label="Filter by country source">
         <option value="">All Countries</option>
         <option value="Sri Lanka">🇱🇰 Sri Lanka</option>
         <option value="India">🇮🇳 India</option>
@@ -906,7 +1015,16 @@
   </div>
 </header>
 
-<main>
+<main id="mainContent">
+  <section class="seo-intro" id="about" aria-labelledby="aboutHeading">
+    <h2 id="aboutHeading">Food composition data for Sri Lanka & India</h2>
+    <p>NutriBase is a searchable food composition table built for nutrition research, meal planning, and food analysis. Each entry lists energy, macronutrients, vitamins, and minerals per 100g edible portion.</p>
+    <ul>
+      <li>Browse foods by group, form, and source country.</li>
+      <li>Use nutrient highlights to compare key values quickly.</li>
+      <li>View detailed nutrition data with references and notes.</li>
+    </ul>
+  </section>
   <div class="feature-banner">
     <span>✨ <strong>Feature Update Available:</strong> Enable food images to see visuals alongside nutritional data. Images can be added per food item in the detail view.</span>
     <button class="feature-toggle" id="imgToggle" onclick="toggleImageFeature()">Enable Images</button>
@@ -940,7 +1058,7 @@
   </div>
 
   <div class="table-wrap" id="tableWrap" style="display:none;">
-    <table id="foodTable">
+    <table id="foodTable" aria-label="Food composition table">
       <thead id="tableHead"></thead>
       <tbody id="tableBody"></tbody>
     </table>
@@ -1176,6 +1294,41 @@ function getMaxHighlight() {
   return Math.max(...filteredFoods.map(f => getHighlightVal(f)));
 }
 
+function buildImageHtml({ src, alt, className, id, style, width, height, loading, decoding }) {
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = alt;
+  if (className) img.className = className;
+  if (id) img.id = id;
+  if (style) img.style.cssText = style;
+  if (width) img.width = width;
+  if (height) img.height = height;
+  if (loading) img.loading = loading;
+  if (decoding) img.decoding = decoding;
+  return img.outerHTML;
+}
+
+function getImageAltText(food) {
+  return food.Food_Name_English || 'Food';
+}
+
+function sanitizeImageUrl(value) {
+  if (!value) return '';
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.protocol === 'https:') return url.href;
+  } catch (e) {
+    return '';
+  }
+  return '';
+}
+
+function bindImageError(img, handler) {
+  if (!img) return;
+  img.addEventListener('error', handler);
+  if (img.complete && img.naturalWidth === 0) handler(new Event('error'));
+}
+
 // ============================================================
 // TABLE RENDER
 // ============================================================
@@ -1199,8 +1352,18 @@ function renderTable(slice) {
       const td = document.createElement('td');
       if (col.key === 'Food_Name_English') {
         const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
-        const imgHtml = imagesEnabled && foodImages[food.Food_ID] 
-          ? `<img src="${foodImages[food.Food_ID]}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle;flex-shrink:0;" onerror="this.style.display='none'">` 
+        const imgAlt = getImageAltText(food);
+        const imgSrc = sanitizeImageUrl(foodImages[food.Food_ID]);
+        const imgHtml = imagesEnabled && imgSrc
+          ? buildImageHtml({
+              src: imgSrc,
+              alt: imgAlt,
+              width: 32,
+              height: 32,
+              loading: 'lazy',
+              decoding: 'async',
+              style: 'border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle;flex-shrink:0;'
+            })
           : '';
         td.className = 'food-name-cell';
         td.innerHTML = `<div style="display:flex;align-items:flex-start;gap:${imagesEnabled?8:0}px;">
@@ -1210,6 +1373,10 @@ function renderTable(slice) {
             ${food.Local_Names ? `<div class="food-local">${food.Local_Names.substring(0, 50)}${food.Local_Names.length > 50 ? '…' : ''}</div>` : ''}
           </div>
         </div>`;
+        if (imagesEnabled && imgSrc) {
+          const img = td.querySelector('img');
+          bindImageError(img, () => { img.style.display = 'none'; });
+        }
       } else if (col.key === 'Food_Group') {
         const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
         const emoji = GROUP_EMOJI[food.Food_Group] || '🍽️';
@@ -1259,7 +1426,8 @@ function renderCards(slice) {
     const grpClass = GROUP_CLASS_MAP[food.Food_Group] || 'g-default';
     const emoji = GROUP_EMOJI[food.Food_Group] || '🍽️';
     const flag = food.Source_Country === 'Sri Lanka' ? '🇱🇰' : food.Source_Country === 'India' ? '🇮🇳' : '🌐';
-    const imgSrc = foodImages[food.Food_ID];
+    const imgSrc = sanitizeImageUrl(foodImages[food.Food_ID]);
+    const imgAlt = getImageAltText(food);
 
     card.innerHTML = `
       <div class="card-header">
@@ -1269,7 +1437,13 @@ function renderCards(slice) {
           ${food.Local_Names ? `<div class="card-local">${food.Local_Names.substring(0,60)}${food.Local_Names.length>60?'…':''}</div>` : ''}
         </div>
         <div class="card-img">
-          ${imagesEnabled && imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;border-radius:8px;object-fit:cover;" onerror="this.parentElement.textContent='${emoji}'">` : emoji}
+          ${imagesEnabled && imgSrc ? buildImageHtml({
+              src: imgSrc,
+              alt: imgAlt,
+              loading: 'lazy',
+              decoding: 'async',
+              style: 'width:100%;height:100%;border-radius:8px;object-fit:cover;'
+            }) : emoji}
         </div>
       </div>
       <div class="card-pills">
@@ -1291,6 +1465,13 @@ function renderCards(slice) {
         <div class="micro-item"><span class="micro-name">Vit C</span><span class="micro-val">${food.Vitamin_C_mg||'–'}mg</span></div>
         <div class="micro-item"><span class="micro-name">Sodium</span><span class="micro-val">${food.Sodium_mg||'–'}mg</span></div>
       </div>`;
+    if (imagesEnabled && imgSrc) {
+      const img = card.querySelector('img');
+      bindImageError(img, () => {
+        const imgWrap = card.querySelector('.card-img');
+        if (imgWrap) imgWrap.textContent = emoji;
+      });
+    }
     grid.appendChild(card);
   });
 }
@@ -1333,15 +1514,22 @@ function openModal(food) {
     &nbsp;<span style="font-style:italic;color:var(--text2)">${food.Scientific_Name||''}</span>
     &nbsp;·&nbsp;${flag}`;
 
-  const imgSrc = foodImages[food.Food_ID] || '';
+  const imgSrc = sanitizeImageUrl(foodImages[food.Food_ID]);
+  const imgAlt = getImageAltText(food);
 
   const body = document.getElementById('modalBody');
   body.innerHTML = `
     ${imagesEnabled ? `
     <div class="modal-img-section">
-      <img class="modal-food-img" id="modalFoodImg" src="${imgSrc}" style="${imgSrc ? 'display:block' : 'display:none'}" onerror="this.style.display='none';document.getElementById('modalImgPlaceholder').style.display='block'">
+      ${buildImageHtml({
+        src: imgSrc,
+        alt: imgAlt,
+        className: 'modal-food-img',
+        id: 'modalFoodImg',
+        style: imgSrc ? 'display:block' : 'display:none'
+      })}
       <div class="modal-img-placeholder" id="modalImgPlaceholder" style="${imgSrc ? 'display:none' : ''}">${emoji}</div>
-      <div class="modal-img-note">Add an image URL for this food item</div>
+      <div class="modal-img-note">Add an HTTPS image URL (loaded from external sources)</div>
       <input class="modal-img-url-input" type="url" id="imgUrlInput" placeholder="https://example.com/food-image.jpg" value="${imgSrc}">
       <div class="modal-img-actions">
         <button class="btn-small btn-primary" onclick="saveImage('${food.Food_ID}')">Save Image</button>
@@ -1411,6 +1599,12 @@ function openModal(food) {
     <div style="margin-top:12px;font-size:11px;color:var(--text3);">
       Source: ${food.Reference || '–'} &nbsp;·&nbsp; Food ID: ${food.Food_ID || '–'}
     </div>`;
+  const modalImg = document.getElementById('modalFoodImg');
+  bindImageError(modalImg, () => {
+    modalImg.style.display = 'none';
+    const placeholder = document.getElementById('modalImgPlaceholder');
+    if (placeholder) placeholder.style.display = 'block';
+  });
 
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1434,7 +1628,8 @@ function closeModalDirect() {
 }
 
 function saveImage(foodId) {
-  const url = document.getElementById('imgUrlInput').value.trim();
+  const input = document.getElementById('imgUrlInput').value.trim();
+  const url = sanitizeImageUrl(input);
   if (url) {
     foodImages[foodId] = url;
     localStorage.setItem('nutribase_images', JSON.stringify(foodImages));
